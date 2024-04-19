@@ -8,6 +8,8 @@ import os
 
 from src.client.ui.login_frame import LoginFrame
 from src.client.ui.main_frame import MainFrame
+from src.client.client import Client
+from src.shared.protocol import HOST
 
 customtkinter.set_appearance_mode("system")
 
@@ -30,8 +32,10 @@ class App(customtkinter.CTk):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        self.client: Client = Client(*HOST)
 
-
+        self.title("Lytcord")
         scale_factor = self._get_window_scaling()
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
@@ -56,23 +60,19 @@ class App(customtkinter.CTk):
         self.bind("<Button-1>", self.click_event, add="+")
 
     def authenticate(self, mode: str, username: str, password: str) -> Tuple[bool, str | None]:
-        if self.app_state == AppState.LOGGIN_IN:
+        if self.app_state == AppState.LOGGING_IN:
             return False, "Already Logging in"
 
         logger.info(f"Authenticating user: {username} with password: {password} in mode: {mode}")
 
         # Implement authentication logic here, for now accept empty queries
-        if username == "":
-            # After authenticating, client should start fetching
-            # data from server, for now just artificial wait
-            # After that switch to main frame
-            # Will probably use threading for this (or asyncio)
-            self.after(500, self.switch_frame)
-            self.app_state = AppState.LOGGIN_IN
-        
-            return True, None
 
-        return False, "Authentication not implemented"
+        if self.client.authenticate(username, password):
+            self.app_state = AppState.LOGGING_IN
+            self.after(0, self.switch_frame)
+            return True, None
+        return False, "Invalid Credentials"
+
     
     def switch_frame(self):
         if self.current_frame == self.login_frame:
@@ -102,7 +102,7 @@ class App(customtkinter.CTk):
 
 class AppState(Enum):
     IDLE = 1
-    LOGGIN_IN = 2
+    LOGGING_IN = 2
 
 
 if __name__ == "__main__":

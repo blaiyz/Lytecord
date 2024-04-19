@@ -1,6 +1,9 @@
 .vscode/
 examples/
 
+cert.pem
+key.pem
+
 # Python boilerplate gitignore pasted from https://github.com/github/gitignore/blob/main/Python.gitignore
 
 # Byte-compiled / optimized / DLL files
