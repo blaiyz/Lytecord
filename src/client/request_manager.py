@@ -1,6 +1,7 @@
-from collections import deque
+from queue import Queue
 import socket
 import ssl
+import select
 import threading
 from threading import Thread
 
@@ -10,11 +11,11 @@ from src.shared.request import Request, RequestType
 class RequestManager():
     def __init__(self, socket: ssl.SSLSocket):
         self.sock = socket
-        self._requests: list[Request] = []
+        self._requests: Queue[Request] = Queue()
         self._lock = threading.Lock()
-        self._condition = threading.Condition(self._lock)
-        self._sender = Thread(target=self._run_sender)
+        self._sender = Thread(target=self._run_sender, daemon=True)
         self._continue = False
+
         
     def begin(self):
         if not self._continue:
@@ -28,14 +29,9 @@ class RequestManager():
         
     def _run_sender(self):
         while self._continue:
-            with self._lock:
-                while len(self._requests) == 0:
-                    self._condition.wait()  # Wait until notified
-
-                req = self._requests.pop(0)
-                self.sock.sendall(req.serialize().encode())
-                    
+            req = self._requests.get()
+            self.sock.sendall(req.serialize().encode())
+            # self.sock.recv(1024)
+            
     def add_request(self, req: Request):
-        with self._lock:
-            self._requests.append(req)
-            self._condition.notify() 
+        self._requests.put(req)

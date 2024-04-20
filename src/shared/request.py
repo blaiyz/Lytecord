@@ -2,7 +2,7 @@ import enum
 import json
 from collections.abc import Callable
 
-from src.shared.abs_data_class import AbsDataClass
+from src.shared.abs_data_class import AbsDataClass, Encoder
 
 class RequestType(enum.Enum):
     AUTH = "Authenticate"
@@ -12,21 +12,16 @@ class RequestType(enum.Enum):
     GET_CHANNELS = "GetChannels"
     GET_ASSET = "GetAsset"
     
-class Encoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, AbsDataClass):
-            return o.serialize(o)
-        return o.__dict__
 
 class Request():
-    def __init__(self, request_type: RequestType, data: dict, callback: Callable | None = None):
+    def __init__(self, request_type: RequestType, data: object, callback: Callable | None = None):
         self.request_type = request_type
         self.data = data
         self.callback = callback
         
         
     def serialize(self):
-        return f"{self.request_type}\n{json.dumps(self.data, cls=Encoder, separators=(',', ':'))}"
+        return f"{str(self.request_type.value)}\n{json.dumps(self.data, cls=Encoder, separators=(',', ':'))}"
         
         
     @staticmethod

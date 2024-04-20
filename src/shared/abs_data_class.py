@@ -2,12 +2,27 @@ import json
 from loguru import logger
 from dataclasses import dataclass
 from abc import ABC
-from typing import Union
+from typing import Union, Callable
 
 
+
+class Encoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Serializeable):
+            return o.serialize()
+        return super().default(o)
+    
+class Serializeable:
+    def serialize(self):
+        return {k.strip("_"): v for k, v in self.__dict__.items()}
+    
+    @staticmethod
+    def deserialize(string: str):
+        j = json.loads(string)
+        return j
 
 @dataclass(frozen=True)
-class AbsDataClass(ABC):
+class AbsDataClass(ABC, Serializeable):
     """
     Abstract data class that all data classes inherit from.
     Includes a serialization and deserialization methods.
@@ -25,19 +40,8 @@ class AbsDataClass(ABC):
         
 
     def __str__(self):
-        return json.dumps(self, default=AbsDataClass.serialize, separators=(",",":"))
+        return json.dumps(self, cls=Encoder, separators=(",",":"))
     
 
-    @staticmethod
-    def serialize(obj: object) -> Union[dict[str, Union[str, int, float, bool, dict, list]], str, int, float, bool, list]:
-        if isinstance(obj, AbsDataClass):
-            return {k.strip("_"): v for k, v in obj.__dict__.items()}
-        return str(obj)
-
-    
-    @classmethod
-    def deserialize(cls, string: str):
-        j = json.loads(string)
-        return cls(**j)
 
         

@@ -1,14 +1,18 @@
 from enum import Enum
 from loguru import logger
 from dataclasses import dataclass
-from src.shared.abs_data_class import AbsDataClass
+from src.shared.abs_data_class import AbsDataClass, Serializeable
 
-class ChannelType(Enum):
-    TEXT = 0
-    VIDEO = 1
-
-    def __str__(self):
-        return self.name.lower()
+class ChannelType(Serializeable, Enum):
+    TEXT = "text"
+    VIDEO = "video"
+    
+    def serialize(self):
+        return self.value
+    
+    @classmethod
+    def deserialize(cls, string: str):
+        return cls[string.upper()]
          
 @dataclass(frozen=True)
 class Channel(AbsDataClass):
