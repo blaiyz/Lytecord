@@ -1,3 +1,4 @@
+from sys import stderr
 import customtkinter
 from loguru import logger
 from PIL import Image
@@ -106,5 +107,6 @@ class AppState(Enum):
 
 
 if __name__ == "__main__":
+    logger.add(stderr, backtrace=True, level="EXCEPTION")
     app = App()
     app.mainloop()

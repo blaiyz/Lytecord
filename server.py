@@ -1,5 +1,9 @@
 import socket, ssl
+from sys import stdout
+from loguru import logger
+import loguru
 
+from src.shared import loguru_config
 from src.shared.protocol import HOST, RequestWrapper
 from src.shared.channel import Channel, ChannelType
 from src.shared import protocol, Request, RequestType, AbsDataClass, Serializeable
@@ -21,6 +25,7 @@ def main():
     bindsocket.bind(HOST)
     bindsocket.listen(5)
     
+    test = Channel(-1, "test", ChannelType.TEXT, 123)
     
     while True:
         sock, addr = bindsocket.accept()
@@ -28,13 +33,11 @@ def main():
         # Just a test
         request, id, subbed = protocol.receive(client)
         print(request, id, subbed)
-        assert type(request.data) == dict
-        data: dict = request.data
-        channel_id = data["id"]
-        name = data["name"]
-        channel_type = ChannelType(data["type"])
-        guild_id = data["guild_id"]
-        chnl = Channel(channel_id, name, channel_type, guild_id)
+        if not isinstance(request.data, dict):
+            print("Invalid request")
+            continue
+        
+        chnl = Channel.from_dict(request.data)
         print(chnl)
         protocol.send(RequestWrapper(Request(RequestType.AUTH, chnl), id, None), client)
         

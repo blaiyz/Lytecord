@@ -28,7 +28,8 @@ class RequestManager():
         
         # incoming
         # normal means one time requests, while subscribed requests
-        # persist until the client unsubscribes (useful for things like new messages)
+        # persist until the client unsubscribes (useful for things like
+        # getting notified for new messages)
         self._normal_requests: dict[int, RequestWrapper] = {}
         self._normal_lock = threading.Lock()
         self._subscribed_requests: dict[int, RequestWrapper] = {}

@@ -7,7 +7,7 @@ class ChannelType(Serializeable, Enum):
     TEXT = "text"
     VIDEO = "video"
     
-    def serialize(self):
+    def to_dict(self):
         return self.value
     
     @classmethod
