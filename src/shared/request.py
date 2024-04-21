@@ -2,7 +2,7 @@ import enum
 import json
 from collections.abc import Callable
 
-from src.shared.abs_data_class import AbsDataClass, Encoder
+from src.shared.abs_data_class import AbsDataClass, Encoder, Serializeable
 
 class RequestType(enum.Enum):
     AUTH = "Authenticate"
@@ -20,6 +20,10 @@ class Request():
         self.callback = callback
         
         
+    
+    def __str__(self):
+        return f"Request({self.request_type}, {self.data}, {self.callback})"
+    
     def serialize(self):
         return f"{str(self.request_type.value)}\n{json.dumps(self.data, cls=Encoder, separators=(',', ':'))}"
         
