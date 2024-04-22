@@ -1,6 +1,8 @@
+from re import S
 import socket
 import ssl
 import threading
+import asyncio
 from loguru import logger
 
 from src.shared import Request
@@ -9,6 +11,9 @@ from collections.abc import Callable
 
 HOST = ("127.0.0.1", 24827)
 NUMBER_OF_LENGTH_BYTES = 4
+
+class SocketClosedException(Exception):
+    pass
 
 class RequestWrapper():
     def __init__(self, request: Request, id: int, callback: Callable[[Request], None] | None, subscribed: bool = False):
@@ -31,9 +36,17 @@ def send(wrapped: RequestWrapper, socket: ssl.SSLSocket):
 def receive(socket: ssl.SSLSocket) -> tuple[Request, int, bool]:
     length = int.from_bytes(socket.recv(NUMBER_OF_LENGTH_BYTES), "big")
     if length == 0:
-        raise Exception("Socket was closed")
+        raise SocketClosedException(f"Socket was closed: {socket}")
     data = socket.recv(length).decode()
     logger.info(f"Received: {data}")
     id, subbed, req = data.split("\n", maxsplit=2)
     subbed = subbed == "True"
     return Request.deserialize(req), int(id), subbed
+
+async def async_send(wrapped: RequestWrapper, socket: ssl.SSLSocket):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, send, wrapped, socket)
+
+async def async_receive(socket: ssl.SSLSocket):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, receive, socket)

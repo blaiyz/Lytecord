@@ -1,5 +1,6 @@
 import socket, ssl
 from sys import stdout
+import threading
 from loguru import logger
 import loguru
 
@@ -7,15 +8,7 @@ from src.shared import loguru_config
 from src.shared.protocol import HOST, RequestWrapper
 from src.shared.channel import Channel, ChannelType
 from src.shared import protocol, Request, RequestType, AbsDataClass, Serializeable
-
-
-
-
-
-def client_handler(client: ssl.SSLSocket, addr: tuple[str, int]):
-    pass
-
-
+from src.server.client import Client
 
 
 def main():
@@ -29,17 +22,9 @@ def main():
     
     while True:
         sock, addr = bindsocket.accept()
-        client = context.wrap_socket(sock, server_side=True)
-        # Just a test
-        request, id, subbed = protocol.receive(client)
-        print(request, id, subbed)
-        if not isinstance(request.data, dict):
-            print("Invalid request")
-            continue
-        
-        chnl = Channel.from_dict(request.data)
-        print(chnl)
-        protocol.send(RequestWrapper(Request(RequestType.AUTH, chnl), id, None), client)
+        client_sock = context.wrap_socket(sock, server_side=True)
+        client = Client(client_sock)
+        threading.Thread(target=client.run, daemon=True).start()
         
         
 if __name__ == "__main__":
