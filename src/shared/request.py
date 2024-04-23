@@ -1,11 +1,15 @@
+from __future__ import annotations
 import enum
 import json
 from collections.abc import Callable
 
 from src.shared.abs_data_class import AbsDataClass, Encoder, Serializeable
+import src.shared.request as request
 
 class RequestType(enum.Enum):
-    AUTH = "Authenticate"
+    AUTHENTICATION = "Authenticate"
+    REGISTER  = "Register"
+    UNAUTHORIZED = "Unauthorized"
     GET_MESSAGES = "GetMessages"
     SEND_MESSAGE = "SendMessage"
     GET_GUILDS = "GetGuilds"
@@ -14,9 +18,9 @@ class RequestType(enum.Enum):
     
 
 class Request():
-    def __init__(self, request_type: RequestType, data: object, callback: Callable | None = None):
+    def __init__(self, request_type: RequestType, data: dict | Serializeable, callback: Callable[[Request], None] | None = None):
         self.request_type = request_type
-        self.data = data
+        self.data = data if isinstance(data, dict) else data.to_dict()
         self.callback = callback
         
         
@@ -31,4 +35,7 @@ class Request():
     @staticmethod
     def deserialize(string: str)-> "Request":
         request_type, data = string.split("\n", maxsplit=1)
-        return Request(RequestType(request_type), json.loads(data))
+        data = json.loads(data)
+        if isinstance(data, dict):
+            return Request(RequestType(request_type), data)
+        raise ValueError(f"Invalid data (got: {data})")

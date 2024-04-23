@@ -15,8 +15,6 @@ class Encoder(json.JSONEncoder):
             return o.to_dict()
         return super().default(o)
     
-    
-    
 
 # Some type shenanigans, see from_dict method    
 def all_annotations(cls) -> ChainMap:

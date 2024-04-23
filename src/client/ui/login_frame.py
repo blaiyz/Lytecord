@@ -80,17 +80,19 @@ class LoginFrame(ctk.CTkFrame):
 
 
     def auth_button_event(self):
-        #print("Login pressed - username:", self.username_entry.get(), "password:", self.password_entry.get())
         
-        success, message = self.auth(self.auth_mode, self.username_entry.get(), self.password_entry.get())
         # Implement login logic here
         # If login is successful, hide login frame and show main frame
         # If login is unsuccessful, show error message
-        if not success:
-            self.error_label.configure(text=message)
-        else:
-            self.error_label.configure(text= "Success!\n Loggin in...", text_color="green")
-        self.error_label.grid()
+        def callback(success: bool, message: str):
+            if not success:
+                self.error_label.configure(text=message)
+            else:
+                self.error_label.configure(text= "Success!\n Loggin in...", text_color="green")
+            self.error_label.grid()
+            
+        self.auth(self.auth_mode, self.username_entry.get(), self.password_entry.get(), callback=callback)
+
         
 
     def switch_authentication_mode(self):

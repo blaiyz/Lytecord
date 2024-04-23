@@ -3,7 +3,7 @@ import customtkinter
 from loguru import logger
 from PIL import Image
 from enum import Enum
-from typing import Tuple
+from typing import Tuple, Callable
 import os
 
 
@@ -11,6 +11,7 @@ from src.client.ui.login_frame import LoginFrame
 from src.client.ui.main_frame import MainFrame
 from src.client.client import Client
 from src.shared.protocol import HOST
+import src.shared.loguru_config
 
 customtkinter.set_appearance_mode("system")
 
@@ -31,10 +32,10 @@ class App(customtkinter.CTk):
     width = START_WIDTH
     height = START_HEIGHT
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, client: Client, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.client: Client = Client(*HOST)
+        self.client = client
 
         self.title("Lytcord")
         scale_factor = self._get_window_scaling()
@@ -60,19 +61,22 @@ class App(customtkinter.CTk):
 
         self.bind("<Button-1>", self.click_event, add="+")
 
-    def authenticate(self, mode: str, username: str, password: str) -> Tuple[bool, str | None]:
+    def authenticate(self, mode: str, username: str, password: str, callback: Callable[[bool, str], None]):
         if self.app_state == AppState.LOGGING_IN:
             return False, "Already Logging in"
 
         logger.info(f"Authenticating user: {username} with password: {password} in mode: {mode}")
+        
+        def c(success: bool):
+            if success:
+                self.app_state = AppState.LOGGING_IN
+                self.after(0, self.switch_frame)
+                callback(True, "Authenticated")
+            callback(False, "Invalid credentials")
+            
+        self.client.authenticate(username, password, c)
 
-        # Implement authentication logic here, for now accept empty queries
 
-        if self.client.authenticate(username, password):
-            self.app_state = AppState.LOGGING_IN
-            self.after(0, self.switch_frame)
-            return True, None
-        return False, "Invalid Credentials"
 
     
     def switch_frame(self):
@@ -107,6 +111,7 @@ class AppState(Enum):
 
 
 if __name__ == "__main__":
-    logger.add(stderr, backtrace=True, level="EXCEPTION")
-    app = App()
+    client = Client(*HOST)
+    app = App(client = client)
     app.mainloop()
+    client.close()

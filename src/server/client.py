@@ -1,67 +1,67 @@
+from __future__ import annotations
 from ssl import SSLSocket
-import asyncio
+import threading
+import queue
+from queue import Queue
+from loguru import logger
+
 
 from src.shared import *
 from src.shared import protocol
-from src.server.request_handler import handle_request
-
+from src.shared.protocol import RequestWrapper
 
 
 class Client():
     def __init__(self, socket: SSLSocket):
-        self.socket = socket
+        self._socket = socket
         self.user: User | None = None
+        self._response_queue: Queue[RequestWrapper] = Queue()
+        self._stop = False
+    
         
-    def run(self):
-        asyncio.run(self.main_handler())
-        
-    async def _set_user(self, user: User):
+    def _set_user(self, user: User):
         self.user = user
         
-    async def main_handler(self):
-        stop = False
-        # Create a Future for receiving a request
-        loop = asyncio.get_event_loop()
-        receive_future = asyncio.ensure_future(protocol.async_receive(self.socket))
+    def _receiver_thread(self, event: threading.Event):
+        try:
+            request, id, subbed = protocol.receive(self._socket)
+        except protocol.SocketClosedException:
+            self._stop = True
+            event.set()
+            return
+        
+        # Circular import fix
+        from src.server import request_handler
+        response = request_handler.handle_request(request, id, subbed, self)
+        wrapped = RequestWrapper(response, id, None, subbed)
+        self._response_queue.put(wrapped)
+        event.set()
+        
+        
+    def main_handler(self):
+        event = threading.Event()
+        t = threading.Thread(target=self._receiver_thread, args=(event,), daemon=True)
 
-        # Create a Future for the event you're waiting for
-        event_future = asyncio.ensure_future(self.wait_for_event())
-        while not stop:
-            try:
-                # Wait for either Future to complete
-                done, _ = await asyncio.wait(
-                    [receive_future, event_future],
-                    return_when=asyncio.FIRST_COMPLETED
-                )
-
-                responses: list[asyncio.Future[protocol.RequestWrapper]] = []
-                # If the receive_future is done, handle the request
-                if receive_future in done:
-                    req, id, subbed = receive_future.result()
-                    responses.append(handle_request(req, id, subbed, self))
-                    receive_future = asyncio.ensure_future(protocol.async_receive(self.socket))
-
-                # If the event_future is done, handle the event
-                if event_future in done:
-                    event = event_future.result()
-                    responses.append(self.handle_event(event))
-                    event_future = asyncio.ensure_future(self.wait_for_event())
-                    
-                for response in responses:
-                    await protocol.async_send(await response, self.socket)
-
-            except Exception as e:
-                print(e)
-                stop = True
+        try:
+            t.start()
+            while not self._stop and event.wait():
                 try:
-                    self.socket.close()
-                except:
-                    pass
-
-    async def wait_for_event(self):
-        # This method should wait for the event and return it
-        pass
-
-    async def handle_event(self, event):
-        # This method should handle the event
-        return "test"
+                    while not self._response_queue.empty():
+                        response = self._response_queue.get()
+                        protocol.send(response, self._socket)
+                    event.clear()
+                except Exception as e:
+                    print(e)
+                    logger.error("Caught exception in main handler")
+                    self._stop = True
+        except Exception as e:
+            print(e)
+            logger.error("Caught exception in main handler")
+        finally:
+            logger.info("Closing client")
+            t.join()
+            try:
+                self._socket.close()
+            except:
+                pass
+            logger.debug("Closed client")

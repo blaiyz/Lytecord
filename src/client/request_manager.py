@@ -5,11 +5,12 @@ import threading
 from threading import Thread
 from collections.abc import Callable
 import time
+from loguru import logger
 
 
 from src.shared.request import Request, RequestType
 from src.shared import protocol
-from src.shared.protocol import RequestWrapper
+from src.shared.protocol import RequestWrapper, SocketClosedException
 
 
 # The maximum number of requests that can be sent at once
@@ -25,6 +26,7 @@ class RequestManager():
         self._requests: Queue[RequestWrapper] = Queue()
         self._current_id = 0
         self._sender = Thread(target=self._run_sender, daemon=True)
+        self._sender_condition = threading.Condition()
         
         # incoming
         # normal means one time requests, while subscribed requests
@@ -34,7 +36,7 @@ class RequestManager():
         self._normal_lock = threading.Lock()
         self._subscribed_requests: dict[int, RequestWrapper] = {}
         self._subscribed_lock = threading.Lock()
-        self._receiver = Thread(target=self._run_receiver, daemon=False)
+        self._receiver = Thread(target=self._run_receiver, daemon=True)
 
 
     def begin(self):
@@ -46,41 +48,51 @@ class RequestManager():
     def stop(self):
         if self._continue:
             self._continue = False
+            with self._sender_condition:
+                self._sender_condition.notify()
             self._sender.join()
             self._receiver.join()
         
     def _run_sender(self):
         while self._continue:
-            req = self._requests.get()
-            id, subbed = req.id, req.subscribed
-            if subbed:
-                with self._subscribed_lock:
-                    self._subscribed_requests[id] = req
-            else:
-                with self._normal_lock:
-                    self._normal_requests[id] = req
-            protocol.send(req, self._sock)
+            with self._sender_condition:
+                self._sender_condition.wait_for(lambda: not self._requests.empty() or not self._continue)
+                if not self._continue:
+                    break
+                req = self._requests.get()
+                id, subbed = req.id, req.subscribed
+                if subbed:
+                    with self._subscribed_lock:
+                        self._subscribed_requests[id] = req
+                else:
+                    with self._normal_lock:
+                        self._normal_requests[id] = req
+                protocol.send(req, self._sock)
+            
             
     def _run_receiver(self):
         while self._continue:
+            try:
+                req, id, subbed = protocol.receive(self._sock)
 
-            req, id, subbed = protocol.receive(self._sock)
-
-            if subbed:
-                with self._subscribed_lock:
-                    wrapped = self._subscribed_requests.get(id, None)
-                    if not wrapped:
-                        continue
-                    if wrapped.callback:
-                        wrapped.callback(req)
-                    
-            else:
-                with self._normal_lock:
-                    wrapped = self._normal_requests.pop(id, None)
-                    if not wrapped:
-                        continue
-                    if wrapped.callback:
-                        wrapped.callback(req)
+                if subbed:
+                    with self._subscribed_lock:
+                        wrapped = self._subscribed_requests.get(id, None)
+                        if not wrapped:
+                            continue
+                        if wrapped.callback:
+                            wrapped.callback(req)
+                        
+                else:
+                    with self._normal_lock:
+                        wrapped = self._normal_requests.pop(id, None)
+                        if not wrapped:
+                            continue
+                        if wrapped.callback:
+                            wrapped.callback(req)
+            except SocketClosedException:
+                logger.warning("Socket closed")
+                break
             
     def request(self, req: Request, callback: Callable[[Request], None]):
         """
@@ -89,7 +101,9 @@ class RequestManager():
         """
         wrapped = RequestWrapper(req, self._current_id, callback)
         self._current_id = (self._current_id + 1) % MAX_ID
-        self._requests.put(wrapped)
+        with self._sender_condition:
+            self._requests.put(wrapped)
+            self._sender_condition.notify()
         
     def subscribe(self, req: Request, callback: Callable[[Request], None]) -> int:
         """
@@ -102,7 +116,9 @@ class RequestManager():
         """
         wrapped = RequestWrapper(req, self._current_id, callback, True)
         self._current_id = (self._current_id + 1) % MAX_ID
-        self._requests.put(wrapped)
+        with self._sender_condition:
+            self._requests.put(wrapped)
+            self._sender_condition.notify()
         return wrapped.id
         
     def unsubscribe(self, id: int):

@@ -42,11 +42,3 @@ def receive(socket: ssl.SSLSocket) -> tuple[Request, int, bool]:
     id, subbed, req = data.split("\n", maxsplit=2)
     subbed = subbed == "True"
     return Request.deserialize(req), int(id), subbed
-
-async def async_send(wrapped: RequestWrapper, socket: ssl.SSLSocket):
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, send, wrapped, socket)
-
-async def async_receive(socket: ssl.SSLSocket):
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, receive, socket)
