@@ -43,7 +43,6 @@ class App(customtkinter.CTk):
         screen_height = self.winfo_screenheight()
         x = int(((screen_width/2) - (self.width/2)) * scale_factor)
         y = int(((screen_height/2) - (self.height/1.5)) * scale_factor)
-        self.title("Lytcord")
         self.geometry(f"{self.width}x{self.height}+{int(x)}+{int(y)}")
 
         self.grid_rowconfigure(0, weight=1, minsize=0)
