@@ -31,7 +31,7 @@ class RequestManager():
         # incoming
         # normal means one time requests, while subscribed requests
         # persist until the client unsubscribes (useful for things like
-        # getting notified for new messages)
+        # getting new messages)
         self._normal_requests: dict[int, RequestWrapper] = {}
         self._normal_lock = threading.Lock()
         self._subscribed_requests: dict[int, RequestWrapper] = {}
@@ -54,8 +54,8 @@ class RequestManager():
             self._receiver.join()
         
     def _run_sender(self):
-        while self._continue:
-            with self._sender_condition:
+        with self._sender_condition:
+            while self._continue:
                 self._sender_condition.wait_for(lambda: not self._requests.empty() or not self._continue)
                 if not self._continue:
                     break

@@ -3,10 +3,13 @@ from dataclasses import dataclass
 from src.shared.abs_data_class import AbsDataClass
 
 MAX_MESSAGE_LENGTH = 1500
-
+TAG_BIT_LENGTH = 22
 
 @dataclass(frozen=True)
 class Message(AbsDataClass):
+    # ID is an integer where the first 22 bits are a tag and the rest is a timestamp
+    # This allows to sort messages by id and have multiple messages with the same timestamp
+    # (This is similar to Discord's snowflake system)
     channel_id: int
     content: str
     # attachment_id is 0 if there is no attachment
@@ -31,7 +34,9 @@ class Message(AbsDataClass):
         if self.timestamp <= 0:
             logger.error(f"Timestamp ({self.timestamp}) cannot be less than or equal to 0")
             raise ValueError("Timestamp cannot be less than or equal to 0")
-        
+        if self.timestamp != self.id >> 22:
+            logger.error(f"Timestamp ({self.timestamp}) must be equal to the upper bits of ID ({self.id}) (the first {TAG_BIT_LENGTH} bits are the tag)")
+            raise ValueError(f"Timestamp must be equal to the upper bits of ID (the first {TAG_BIT_LENGTH} bits are the tag)")
     
     def sort_key(self):
-        return -self.timestamp
+        return -self.id

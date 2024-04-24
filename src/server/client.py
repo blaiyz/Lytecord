@@ -16,44 +16,56 @@ class Client():
         self._socket = socket
         self.user: User | None = None
         self._response_queue: Queue[RequestWrapper] = Queue()
+        self._condition = threading.Condition()
         self._stop = False
     
         
     def _set_user(self, user: User):
         self.user = user
         
-    def _receiver_thread(self, event: threading.Event):
-        try:
-            request, id, subbed = protocol.receive(self._socket)
-        except protocol.SocketClosedException:
-            self._stop = True
-            event.set()
-            return
-        
-        # Circular import fix
-        from src.server import request_handler
-        response = request_handler.handle_request(request, id, subbed, self)
-        wrapped = RequestWrapper(response, id, None, subbed)
+    def _receiver_thread(self):
+        while not self._stop:
+            try:
+                request, id, subbed = protocol.receive(self._socket)
+            except protocol.SocketClosedException:
+                self._stop = True
+                with self._condition:
+                    self._condition.notify()
+                return
+            
+            # Circular import fix
+            from src.server import request_handler
+            response = request_handler.handle_request(request, id, subbed, self)
+            wrapped = RequestWrapper(response, id, None, subbed)
+            self._response_queue.put(wrapped)
+            self._condition.notify()
+            
+    def add_response(self, wrapped: RequestWrapper):
         self._response_queue.put(wrapped)
-        event.set()
+        with self._condition:
+            self._condition.notify()
         
         
     def main_handler(self):
-        event = threading.Event()
-        t = threading.Thread(target=self._receiver_thread, args=(event,), daemon=True)
+        t = threading.Thread(target=self._receiver_thread, daemon=True)
 
         try:
             t.start()
-            while not self._stop and event.wait():
+            with self._condition:
                 try:
-                    while not self._response_queue.empty():
-                        response = self._response_queue.get()
-                        protocol.send(response, self._socket)
-                    event.clear()
+                    while not self._stop:
+                        self._condition.wait_for(lambda: not self._response_queue.empty() or self._stop)
+                        if self._stop:
+                            break
+        
+                        while not self._response_queue.empty():
+                            response = self._response_queue.get()
+                            protocol.send(response, self._socket)
                 except Exception as e:
                     print(e)
                     logger.error("Caught exception in main handler")
                     self._stop = True
+                
         except Exception as e:
             print(e)
             logger.error("Caught exception in main handler")

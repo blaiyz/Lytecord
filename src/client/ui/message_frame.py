@@ -22,7 +22,7 @@ class MessageFrame(CTkFrame):
         self._author_label = CTkLabel(self, text=self._author_name, font=CTkFont(size=FONT_SIZE+2, weight="bold"))
         self._author_label.grid(row=0, column=0, sticky="w", padx=10, pady=1)
 
-        self._time_label = CTkLabel(self, text=datetime.fromtimestamp(self.message.timestamp/1000).strftime("%H:%M"), font=CTkFont(size=FONT_SIZE-2))
+        self._time_label = CTkLabel(self, text=datetime.fromtimestamp(self.message.timestamp).strftime("%H:%M"), font=CTkFont(size=FONT_SIZE-2))
         self._time_label.grid(row=0, column=1, sticky="w", padx=10, pady=1)
 
         # Use label for now, change to textbox later if possible

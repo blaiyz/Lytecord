@@ -12,6 +12,7 @@ class RequestType(enum.Enum):
     UNAUTHORIZED = "Unauthorized"
     GET_MESSAGES = "GetMessages"
     SEND_MESSAGE = "SendMessage"
+    CHANNEL_SUBSCRIPTION = "ChannelSubscription"
     GET_GUILDS = "GetGuilds"
     GET_CHANNELS = "GetChannels"
     GET_ASSET = "GetAsset"

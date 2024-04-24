@@ -9,7 +9,7 @@ from loguru import logger
 from src.client.ui.message_frame import MessageFrame
 from src.client.message_manager import MessageManager, THRESHOLD
 from src.shared.channel import Channel, ChannelType
-from src.shared.message import Message, MAX_MESSAGE_LENGTH
+from src.shared.message import TAG_BIT_LENGTH, Message, MAX_MESSAGE_LENGTH
 from src.client.ui.design import ATTACHMENT_ICON_DARK, ATTACHMENT_ICON_LIGHT
 
 TEST_MESSAGE = """Test message abcdefghijklmnopqrstuvwxyz 123123123123983475094387520862314912
@@ -99,7 +99,7 @@ class TextChannel(CTkFrame):
         self._top_row = START_ROW
         self._bottom_row = START_ROW + 1
         self._scroll_lock = False
-        messages = self._mm.get_messages(timestamp=0, count=LOAD_COUNT)
+        messages = self._mm.get_messages(id=0, count=LOAD_COUNT)
         self._load_messages(messages, from_top=False, stick=True)
             
                                           
@@ -145,7 +145,7 @@ class TextChannel(CTkFrame):
         """
         Loads a messages into the frame.
         
-        Assumes the messages are sorted in descending order (by timestamp).
+        Assumes the messages are sorted in descending order (by id).
         
         Stick = true means the scrollbar will be moved to the bottom after loading the messages.
         """
@@ -289,14 +289,14 @@ class TextChannel(CTkFrame):
         if yview[0] == 0.0:
             logger.debug(f"scroll callback {yview}")
             logger.debug(f"loading from top m:{self._message_list[-1].message.content}")
-            messages = self._mm.get_messages(timestamp=self._message_list[-1].message.timestamp, before=True, count=LOAD_COUNT)
+            messages = self._mm.get_messages(id=self._message_list[-1].message.id, before=True, count=LOAD_COUNT)
             #logger.debug(f"loading from top\n"+"\n".join([m.content for m in messages]))
             if len(messages) != 0:
                 self._load_messages(messages, from_top=True)
         elif yview[1] == 1.0:
             logger.debug(f"scroll callback {yview}")
             logger.debug(f"loading from bottom m:{self._message_list[0].message.content}")
-            messages = self._mm.get_messages(timestamp=self._message_list[0].message.timestamp, before=False, count=LOAD_COUNT)
+            messages = self._mm.get_messages(id=self._message_list[0].message.id, before=False, count=LOAD_COUNT)
             #logger.debug(f"loading from bottom\n"+"\n".join([m.content for m in messages]))
             if len(messages) != 0:
                 self._load_messages(messages, from_top=False)
@@ -308,7 +308,8 @@ class TextChannel(CTkFrame):
             return
         # Temporary message object (need confirmation from server)
         try:
-            message = Message(0, self._channel.id, self._entry.get(), 1, 1, int(datetime.now().timestamp() * 1000))
+            t = int(datetime.now().timestamp())
+            message = Message(t << TAG_BIT_LENGTH, self._channel.id, self._entry.get(), 1, 1, t)
         except ValueError:
             logger.warning("Failed to create message object")
             return
