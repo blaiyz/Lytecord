@@ -20,7 +20,7 @@ class ChannelSubscription():
         self._startup_event = threading.Event()
 
     def begin(self):
-        if not self._stop:
+        if not self._stop and not self._startup_event.is_set():
             self._thread.start()
             self._startup_event.wait()
             channel_manager.subscribe(self)
@@ -29,6 +29,7 @@ class ChannelSubscription():
     def stop(self):
         self._stop = True
         with self.client._condition:
+            channel_manager.unsubscribe(self)
             self.client._condition.notify()
         self._thread.join()
         

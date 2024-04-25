@@ -6,6 +6,7 @@ from datetime import datetime
 from loguru import logger
 
 
+from src.client.client import Client
 from src.client.ui.message_frame import MessageFrame
 from src.client.message_manager import MessageManager, THRESHOLD
 from src.shared.channel import Channel, ChannelType
@@ -37,7 +38,7 @@ class TextChannel(CTkFrame):
     """
     Contains the channel messages and the message entry.
     """
-    def __init__(self, *args, message_manager: MessageManager, client, **kwargs):
+    def __init__(self, *args, message_manager: MessageManager, client: Client, **kwargs):
         super().__init__(*args, corner_radius=0, **kwargs)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)

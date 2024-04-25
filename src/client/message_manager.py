@@ -54,7 +54,7 @@ class MessageManager():
         self._top = True
         for i in range(1, 150):
             t = int(datetime.now().timestamp())
-            self.insert_sorted(Message(t << TAG_BIT_LENGTH + i, self._channel.id, f"TEST {i}", 1, 1, t))
+            self.insert_sorted(Message((t << TAG_BIT_LENGTH) + i, self._channel.id, f"TEST {i}", 1, 1, t))
         
         #logger.debug("\n" + "\n".join([str(m) for m in self._messages]))
         

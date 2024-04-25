@@ -3,6 +3,7 @@ from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkS
 from loguru import logger
 from PIL import Image
 
+from src.client.client import Client
 from src.client.ui.channel_box import ChannelBox
 from src.shared.channel import Channel
 
@@ -10,9 +11,10 @@ from src.shared.channel import Channel
 HEIGHT = 40
 
 class ChannelButton(CTkButton):
-    def __init__(self, *args, channel: Channel, channel_box: ChannelBox, **kwargs):
+    def __init__(self, *args, channel: Channel, channel_box: ChannelBox, client: Client, **kwargs):
         super().__init__(*args, text=channel.name, command=self.on_click, font=("", 20), corner_radius=5, height=HEIGHT, **kwargs)
 
+        self._client = client
         self._channel = channel
         self._cb = channel_box
 

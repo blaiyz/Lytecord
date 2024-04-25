@@ -51,7 +51,7 @@ class App(customtkinter.CTk):
         self.login_frame = LoginFrame(self, auth = self.authenticate)
         self.login_frame.grid(row=0, column=0, sticky='nsew')
 
-        self.main_frame = MainFrame(self)
+        self.main_frame = MainFrame(self, client= self.client)
         self.main_frame.grid(row=0, column=0, sticky='nsew')
         self.main_frame.grid_remove()
 
@@ -62,7 +62,7 @@ class App(customtkinter.CTk):
 
     def authenticate(self, mode: str, username: str, password: str, callback: Callable[[bool, str], None]):
         if self.app_state == AppState.LOGGING_IN:
-            return False, "Already Logging in"
+            callback(False, "Already Logging in")
 
         logger.info(f"Authenticating user: {username} with password: {password} in mode: {mode}")
         
@@ -75,13 +75,12 @@ class App(customtkinter.CTk):
             
         self.client.authenticate(username, password, c)
 
-
-
     
     def switch_frame(self):
         if self.current_frame == self.login_frame:
             self.login_frame.grid_remove()
             self.main_frame.grid()
+            self.main_frame.load()
             self.state("zoomed")
             self.current_frame = self.main_frame
         else:

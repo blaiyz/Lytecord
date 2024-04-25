@@ -18,6 +18,10 @@ class Client():
         self._response_queue: Queue[RequestWrapper] = Queue()
         self._condition = threading.Condition()
         self._stop = False
+        
+        # Sorry :(
+        from src.server import channel_manager
+        self.current_channel: channel_manager.ChannelSubscription | None = None
     
         
     def _set_user(self, user: User):
@@ -35,10 +39,12 @@ class Client():
             
             # Circular import fix
             from src.server import request_handler
+            
             response = request_handler.handle_request(request, id, subbed, self)
             wrapped = RequestWrapper(response, id, None, subbed)
             self._response_queue.put(wrapped)
-            self._condition.notify()
+            with self._condition:
+                self._condition.notify()
             
     def add_response(self, wrapped: RequestWrapper):
         self._response_queue.put(wrapped)

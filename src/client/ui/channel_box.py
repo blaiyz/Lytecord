@@ -4,6 +4,7 @@ import tkinter as tk
 from loguru import logger
 
 
+from src.client.client import Client
 from src.client.ui.text_channel import TextChannel
 from src.client.message_manager import MessageManager, THRESHOLD
 from src.shared.channel import Channel
@@ -17,7 +18,7 @@ class ChannelBox(CTkFrame):
     """
     Houses the frames for different channel types
     """
-    def __init__(self, *args, message_manager: MessageManager, client, **kwargs):
+    def __init__(self, *args, message_manager: MessageManager, client: Client, **kwargs):
         super().__init__(*args, corner_radius=0, **kwargs)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
