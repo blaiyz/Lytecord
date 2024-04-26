@@ -16,6 +16,7 @@ class ServerChannel:
         self._buffer: list[Message] = []
         
     def add_subscription(self, sub: ChannelSubscription):
+        logger.debug(f"Adding subscription {sub} to channel {self.channel}")
         with self._lock:
             self._subscriptions.append(sub)
             
@@ -28,7 +29,9 @@ class ServerChannel:
             return len(self._subscriptions) == 0
             
     def broadcast(self, message: Message, sender: ChannelSubscription):
+        logger.debug(f"Broadcasting message {message} to channel {self.channel}")
         with self._lock:
+            logger.debug(f"Buffer: {self._buffer}")
             if message in self._buffer:
                 return
             
@@ -37,6 +40,7 @@ class ServerChannel:
                 self._buffer.pop()
             for sub in self._subscriptions:
                 if sub != sender:
+                    logger.debug(f"Sending message to {sub}")
                     sub.wake_up()
                     
     def get_messages(self, after: int):
@@ -71,6 +75,7 @@ def subscribe(client: ChannelSubscription):
 def unsubscribe(client: ChannelSubscription):
     channel_id = client.channel.id
     with lock:
+        logger.debug("acquired lock")
         if channel_id in channels:
             channels[channel_id].remove_subscription(client)
             if channels[channel_id].is_empty():

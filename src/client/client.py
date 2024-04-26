@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import ssl
 import socket
 from typing import Callable
@@ -22,6 +23,11 @@ def ensure_correct_data(default, callback: Callable):
         return inner
     return outer
 
+@dataclass
+class Subscription:
+    channel: Channel | None
+    id: int | None
+
 class Client():
     def __init__(self, ip: str, port: int):
         self.ip = ip
@@ -33,7 +39,7 @@ class Client():
         self.sock.setblocking(True)
         self.request_manager = RequestManager(self.sock)
         self.request_manager.begin()
-        self.current_channel: Channel | None = None
+        self.subscription = Subscription(None, None)
         
         
     def authenticate(self, username: str, password: str, callback: Callable[[bool], None]):
@@ -43,7 +49,7 @@ class Client():
                 callback(True)
             callback(False)
         
-        request = Request(RequestType.AUTHENTICATION, {"username": username, "password": password}, callback=c)
+        request = Request(RequestType.AUTHENTICATION, {"username": username, "password": password})
         self.request_manager.request(request, callback=c)
         
     def get_guilds(self, callback: Callable[[list[Guild]], None]):
@@ -55,7 +61,7 @@ class Client():
             else:
                 callback([])
         
-        request = Request(RequestType.GET_GUILDS, {}, callback=c)
+        request = Request(RequestType.GET_GUILDS, {})
         self.request_manager.request(request, callback=c)
         
     def get_channels(self, guild_id: int, callback: Callable[[list[Channel]], None]):
@@ -67,7 +73,7 @@ class Client():
             else:
                 callback([])
         
-        request = Request(RequestType.GET_CHANNELS, {"guild_id": guild_id}, callback=c)
+        request = Request(RequestType.GET_CHANNELS, {"guild_id": guild_id})
         self.request_manager.request(request, callback=c)
         
     def get_messages(self, channel_id: int, from_id: int, count: int, callback: Callable[[list[Message]], None]):
@@ -79,7 +85,55 @@ class Client():
             else:
                 callback([])
         
-        request = Request(RequestType.GET_MESSAGES, {"channel_id": channel_id, "before": from_id, "count": count}, callback=c)
+        request = Request(RequestType.GET_MESSAGES, {"channel_id": channel_id, "before": from_id, "count": count})
+        self.request_manager.request(request, callback=c)
+        
+    def subscribe_channel(self, channel: Channel, callback: Callable[[Message | None], None]):
+        if self.subscription.id is not None:
+            logger.warning("Already subscribed (or subscribing) to a channel, please unsubscribe first")
+            return
+        
+        c_id = channel.id
+        confirmation = {"status": False}
+        @ensure_correct_data(default=None, callback=callback)
+        def c(req: Request):
+            if confirmation["status"]:
+                message = Message.from_dict(req.data["message"])
+                callback(message)
+                return
+            
+            if req.data["status"] == "success":
+                confirmation["status"] = True
+                self.subscription.channel = channel
+            else:
+                self.subscription.id = None
+        
+        request = Request(RequestType.CHANNEL_SUBSCRIPTION, {"subtype": "subscribe", "id": c_id})
+        self.subscription.id = self.request_manager.subscribe(request, callback=c)
+        
+    def unsubscribe_channel(self):
+        if self.subscription.channel is None or self.subscription.id is None:
+            logger.warning("Not subscribed to any channel")
+            return
+        
+        self.request_manager.unsubscribe(self.subscription.id, Request(RequestType.CHANNEL_SUBSCRIPTION, {"subtype": "unsubscribe"}))
+        self.subscription.channel = None
+        self.subscription.id = None
+        
+    def send_message(self, message: Message, callback: Callable[[Message | None], None]):
+        if self.subscription.channel is None:
+            logger.warning("Not subscribed to any channel")
+            return
+        
+        @ensure_correct_data(default=None, callback=callback)
+        def c(req: Request):
+            if req.data["status"] == "success":
+                message = Message.from_dict(req.data["message"])
+                callback(message)
+            else:
+                callback(None)
+        
+        request = Request(RequestType.SEND_MESSAGE, {"message": message})
         self.request_manager.request(request, callback=c)
     
     def close(self):

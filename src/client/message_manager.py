@@ -33,11 +33,22 @@ class MessageManager():
     def set_channel(self, channel: Channel | None, received: Callable | None = None):
         if channel == self._current_channel:
             return
+        
+        if self._current_channel is not None:
+            self._client.unsubscribe_channel()
         self._messages.clear()
         self._channel = channel
         self._top = False
+        
         if channel is not None:
-            self.fetch_messages(received=received)
+            def callback():
+                self._client.subscribe_channel(channel, self.new_message)
+                if received is not None:
+                    received()
+                
+            self.fetch_messages(received=callback)
+        else:
+            self._client.unsubscribe_channel()
         
     
     def fetch_messages(self, from_id: int = 0, count: int = 100, received: Callable | None = None):
@@ -126,12 +137,13 @@ class MessageManager():
             logger.warning("Cannot send message in a None channel, please set channel first")
             return
         
-        # Implement networking later
-        # should ask the server to send the message and then call new_message (probably on a different thread)
-        t = int(datetime.now().timestamp())
-        self.new_message(Message(t << TAG_BIT_LENGTH, self._channel.id, message.content, 1, 1, t))
+        
+        self._client.send_message(message, callback=self.new_message)
     
-    def new_message(self, message: Message):
+    def new_message(self, message: Message | None):
+        if message is None:
+            logger.warning("Received None message")
+            return
         if self._messages is None:
             logger.warning("Cannot send message in a None channel, please set channel first")
             return

@@ -78,6 +78,8 @@ class Client():
         finally:
             logger.info("Closing client")
             t.join()
+            if self.current_channel:
+                self.current_channel.stop()
             try:
                 self._socket.close()
             except:

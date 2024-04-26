@@ -298,7 +298,8 @@ class TextChannel(CTkFrame):
         return
             
     def _scroll_callback(self, event: tk.Event):
-        if self._scroll_lock:
+        if self._scroll_lock or self._channel is None or self._loading:
+            logger.debug(f"scroll: {self._scroll_lock}, channel: {self._channel}, loading: {self._loading}")
             return
         
         yview = self._messages_frame._parent_canvas.yview()

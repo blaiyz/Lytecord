@@ -27,6 +27,7 @@ class RequestManager():
         self._current_id = 0
         self._sender = Thread(target=self._run_sender, daemon=True)
         self._sender_condition = threading.Condition()
+        self._send_lock = threading.Lock()
         
         # incoming
         # normal means one time requests, while subscribed requests
@@ -101,9 +102,10 @@ class RequestManager():
         """
         wrapped = RequestWrapper(req, self._current_id, callback)
         self._current_id = (self._current_id + 1) % MAX_ID
-        with self._sender_condition:
-            self._requests.put(wrapped)
-            self._sender_condition.notify()
+        with self._send_lock:
+            with self._sender_condition:
+                self._requests.put(wrapped)
+                self._sender_condition.notify()
         
     def subscribe(self, req: Request, callback: Callable[[Request], None]) -> int:
         """
@@ -116,14 +118,21 @@ class RequestManager():
         """
         wrapped = RequestWrapper(req, self._current_id, callback, True)
         self._current_id = (self._current_id + 1) % MAX_ID
-        with self._sender_condition:
-            self._requests.put(wrapped)
-            self._sender_condition.notify()
+        with self._send_lock:
+            with self._sender_condition:
+                self._requests.put(wrapped)
+                self._sender_condition.notify()
         return wrapped.id
         
-    def unsubscribe(self, id: int):
+    def unsubscribe(self, id: int, request: Request):
         """
         Unsubscribe from a request, using the id returned from subscribe.
+        Provide a request that will let the server know that you want to
+        unsubscribe.
         """
-        with self._subscribed_lock:
-            self._subscribed_requests.pop(id, None)
+        with self._send_lock:
+            with self._subscribed_lock:
+                self._subscribed_requests.pop(id, None)
+        def callback(req: Request):
+            pass
+        self.request(request, callback)

@@ -22,12 +22,11 @@ class Request():
     def __init__(self, request_type: RequestType, data: dict | Serializeable, callback: Callable[[Request], None] | None = None):
         self.request_type = request_type
         self.data = data if isinstance(data, dict) else data.to_dict()
-        self.callback = callback
         
         
     
     def __str__(self):
-        return f"Request({self.request_type}, {self.data}, {self.callback})"
+        return f"Request({self.request_type}, {self.data})"
     
     def serialize(self):
         return f"{str(self.request_type.value)}\n{json.dumps(self.data, cls=Encoder, separators=(',', ':'))}"

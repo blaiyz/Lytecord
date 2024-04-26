@@ -1,4 +1,5 @@
 import threading
+from loguru import logger
 
 from src.server.client import Client
 from src.shared.channel import Channel
@@ -13,6 +14,7 @@ class ChannelSubscription():
         # This is NOT the channel id, but the subscription id
         self._id = id
         self.channel = channel
+        self.server_channel: channel_manager.ServerChannel | None = None
         self._last_message_id = 0
         self._stop = False
         self._thread = threading.Thread(target=self._run, daemon=True)
@@ -23,29 +25,34 @@ class ChannelSubscription():
         if not self._stop and not self._startup_event.is_set():
             self._thread.start()
             self._startup_event.wait()
-            channel_manager.subscribe(self)
+            self.server_channel = channel_manager.subscribe(self)
 
             
     def stop(self):
-        self._stop = True
-        with self.client._condition:
+        with self._condition:
+            self._stop = True
+            logger.debug("got here")
             channel_manager.unsubscribe(self)
-            self.client._condition.notify()
+            logger.debug('unsubscribed')
+            self.server_channel = None
+            self._condition.notify()
+            logger.debug('notified')
         self._thread.join()
         
     def _run(self):
         with self._condition:
             self._startup_event.set()
+            logger.debug("event set")
             while not self._stop:
                 self._condition.wait()
+                logger.debug(f"woke up {self._id}, {self._stop}")
                 if self._stop:
                     break
                 
-                server_channel = channel_manager.get_channel(self.channel.id)
-                if not server_channel:
+                if not self.server_channel:
                     continue
                 
-                messages = server_channel.get_messages(self._last_message_id)
+                messages = self.server_channel.get_messages(self._last_message_id)
                 for message in messages:
                     self.client.add_response(self.create_response(message))
                     
@@ -58,3 +65,11 @@ class ChannelSubscription():
     def wake_up(self):
         with self._condition:
             self._condition.notify()
+            
+    def send_message(self, message: Message):
+        if not self.server_channel:
+            logger.warning("Tried to send message to None channel, please set channel first")
+            return False
+        
+        self.server_channel.broadcast(message, self)
+        return True
