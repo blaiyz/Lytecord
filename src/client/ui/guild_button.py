@@ -35,8 +35,10 @@ class GuildButton(CTkButton):
 
     def on_click(self):
         logger.debug(f"GuildButton {self._guild} clicked")
-        self._cf.current_guild = self._guild
-        self._cf.load()
+        if self._cf.load(new_guild = self._guild):
+            return
+        else:
+            logger.warning("Failed to load channels")
 
     @property 
     def guild(self):

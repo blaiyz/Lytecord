@@ -35,7 +35,7 @@ class Serializeable:
         try:
             # Get the types of the fields
             field_types = all_annotations(cls)
-            logger.debug(f"Field types: {field_types}")
+            #logger.debug(f"Field types: {field_types}")
             # Create a new dictionary with the data converted to the correct types
             converted_data = {}
             for field, value in data.items():

@@ -38,19 +38,22 @@ class ChannelBox(CTkFrame):
         self._empty_channel.grid(row=0, column=0, sticky="nsew")
                 
 
-    def set_channel(self, channel: Channel | None):
+    def set_channel(self, channel: Channel | None) -> bool:
         logger.info(f"Setting channel; new: {channel}, old: {self._channel}")
         if self._channel == channel:
-            return
+            logger.warning("Tried to set the same channel")
+            return False
         
-        self._channel = channel
+        success = self._text_channel.set_channel(channel)
+        if not success:
+            return False
         
         if channel is None:
             self._text_channel.grid_remove()
-            self._text_channel.set_channel(None)
             self._empty_channel.grid()
         else:
             self._empty_channel.grid_remove()
             self._text_channel.grid()
-            self._text_channel.set_channel(self._channel)
+        self._channel = channel
+        return True
             

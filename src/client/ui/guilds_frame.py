@@ -22,6 +22,7 @@ class GuildsFrame(CTkScrollableFrame):
         self.client = client
         self.guilds: list[GuildButton] = []
         self._cf = cf
+        self._loading = False
 
         self.grid_columnconfigure(0, weight=1)
 
@@ -42,14 +43,26 @@ class GuildsFrame(CTkScrollableFrame):
         for i, gb in enumerate(self.guilds):
             gb.grid(row=i, column=0, padx=5, pady=5)
         
-    def clear_guilds(self):
+    def clear_guilds(self) -> bool:
+        logger.debug("Clearing guilds")
+        if self._loading:
+            logger.warning("Currently loading guilds")
+            return False
+        
         for guild in self.guilds:
             guild.destroy()
         self.guilds.clear()
+        return True
         
     def load(self):
+        if self._loading:
+            logger.warning("Already loading guilds")
+            return
+        
         def callback(guilds: list[Guild]):
             for guild in guilds:
                 self.add_guild(guild)
+            self._loading = False
         
         self.client.get_guilds(callback=callback)
+        self._loading = True

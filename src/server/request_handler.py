@@ -9,6 +9,7 @@ from src.server.channel_manager import ServerChannel
 
 
 TEMPORARY_GUILD_ID = 7189299954974720
+TEMPORARY_MESSAGE_ID = 7189649445355520
 
 
 def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Request:
@@ -21,6 +22,8 @@ def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Reque
             res_data = get_guilds(req.data, client)
         case RequestType.GET_CHANNELS if not subbed:
             res_data = get_channels(req.data, client)
+        case RequestType.GET_MESSAGES if not subbed:
+            res_data = get_messages(req.data, client)
         case RequestType.CHANNEL_SUBSCRIPTION if subbed:
             res_data = channel_sub_handler(req.data, client, id)
         case _:
@@ -33,7 +36,7 @@ def ensure_correct_data(func):
     def wrapper(data, *args, **kwargs):
         try:
             return func(data, *args, **kwargs)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, KeyError):
             logger.debug(f"Invalid data: {data} from func: {func.__name__}")
             return {"status": "error", "message": "Invalid data"}
     return wrapper
@@ -60,9 +63,23 @@ def get_guilds(data: dict, client: Client) -> dict:
 # Temporary function
 @ensure_correct_data
 def get_channels(data: dict, client: Client) -> dict:
-    guild_id = data["guild_id"]
-    channels = [Channel(TEMPORARY_GUILD_ID + i, "test channel", ChannelType.TEXT, guild_id) for i in range(1, 6)]
+    guild_id: int = data["guild_id"]
+    channels = [Channel(TEMPORARY_GUILD_ID + i, f"test channel {i}", ChannelType.TEXT, guild_id) for i in range(1, 6)]
     return {"status": "success", "channels": channels}
+
+# Temporary function
+@ensure_correct_data
+def get_messages(data: dict, client: Client) -> dict:
+    channel_id: int = data["channel_id"]
+    before: int = data["before"]
+    count: int = data["count"]
+    
+    logger.debug(f"Getting messages before {before} in channel {channel_id} ;;; type {type(before)}")
+    if before != 0:
+        return {"status": "success", "messages": []}
+    
+    messages = [Message(TEMPORARY_MESSAGE_ID + i, channel_id, f"Test message {i}", 0, 1, TEMPORARY_MESSAGE_ID >> 22) for i in range(1, count + 1)]
+    return {"status": "success", "messages": messages}
 
 
 @ensure_correct_data

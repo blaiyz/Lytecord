@@ -1,4 +1,3 @@
-from calendar import c
 import customtkinter as ctk
 from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame, CTkImage
 import tkinter as tk
@@ -51,6 +50,7 @@ class TextChannel(CTkFrame):
         self._bottom_row = START_ROW + 1
         self._scroll_lock = True
         self._channel: Channel | None = None
+        self._loading = False
         
         # Messages frame
         self._messages_frame = CTkScrollableFrame(self, label_anchor="n", label_text="", label_font=CTkFont(family="Helvetica", size=20), fg_color="transparent")
@@ -76,21 +76,27 @@ class TextChannel(CTkFrame):
         self._entry.grid(row=0, column=1, sticky="nsew", padx=(1, 5), pady=3)
         
 
-    def set_channel(self, channel: Channel | None):
+    def set_channel(self, channel: Channel | None) -> bool:
         logger.debug(f"Setting channel {channel}, cur: {self._channel}")
         if self._channel == channel:
-            return
+            return False
+        
+        if self._loading:
+            logger.warning("Already loading text channel")
+            return False
+        
+        self._loading = True
         
         self._channel = channel
         self._scroll_lock = True
-        self._mm.set_channel(channel)
 
         for message in self._message_list:
             message.destroy()
         self._message_list.clear()
 
         if self._channel is None:
-            return
+            self._loading = False
+            return True
         
         self._messages_frame.configure(label_text=self._channel.name)
         self._entry.configure(placeholder_text=f"Message #{self._channel.name}")
@@ -100,8 +106,17 @@ class TextChannel(CTkFrame):
         self._top_row = START_ROW
         self._bottom_row = START_ROW + 1
         self._scroll_lock = False
-        messages = self._mm.get_messages(id=0, count=LOAD_COUNT)
-        self._load_messages(messages, from_top=False, stick=True)
+        
+        def callback():
+            messages = self._mm.get_messages(id=0, count=LOAD_COUNT)
+            self._load_messages(messages, from_top=False, stick=True)
+            # def set_loading_false():
+            #     self._loading = False
+            # self.after(0, set_loading_false)
+            self._loading = False
+        self._mm.set_channel(channel, received=callback)
+        return True
+        
             
                                           
     def _move_scrollbar_after_load(self, message_frame: MessageFrame, top: bool, relative_pos: int | None = None):
@@ -121,9 +136,9 @@ class TextChannel(CTkFrame):
             stick = True
             top = False
 
-        logger.debug("time1")
+        #logger.debug("time1")
         self.update_idletasks()
-        logger.debug("time2")
+        #logger.debug("time2")
         
         if not top:
             logger.debug(f"parent canvas {self._messages_frame._parent_canvas.winfo_height()}")
@@ -288,14 +303,14 @@ class TextChannel(CTkFrame):
         
         yview = self._messages_frame._parent_canvas.yview()
         if yview[0] == 0.0:
-            logger.debug(f"scroll callback {yview}")
+            #logger.debug(f"scroll callback {yview}")
             logger.debug(f"loading from top m:{self._message_list[-1].message.content}")
             messages = self._mm.get_messages(id=self._message_list[-1].message.id, before=True, count=LOAD_COUNT)
             #logger.debug(f"loading from top\n"+"\n".join([m.content for m in messages]))
             if len(messages) != 0:
                 self._load_messages(messages, from_top=True)
         elif yview[1] == 1.0:
-            logger.debug(f"scroll callback {yview}")
+            #logger.debug(f"scroll callback {yview}")
             logger.debug(f"loading from bottom m:{self._message_list[0].message.content}")
             messages = self._mm.get_messages(id=self._message_list[0].message.id, before=False, count=LOAD_COUNT)
             #logger.debug(f"loading from bottom\n"+"\n".join([m.content for m in messages]))

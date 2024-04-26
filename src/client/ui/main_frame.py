@@ -23,7 +23,7 @@ class MainFrame(CTkFrame):
 
         self.client = client
 
-        self.mm = MessageManager(None)
+        self.mm = MessageManager(client=client)
         self.cb = ChannelBox(self, message_manager=self.mm, client=client)
         self.cb.grid(row=1, column=1, sticky="nsew", padx=0, pady=0)
 

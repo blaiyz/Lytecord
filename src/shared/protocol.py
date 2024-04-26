@@ -11,6 +11,7 @@ from collections.abc import Callable
 
 HOST = ("127.0.0.1", 24827)
 NUMBER_OF_LENGTH_BYTES = 4
+MAX_DATA_LOG_LENGTH = 500
 
 class SocketClosedException(Exception):
     pass
@@ -28,7 +29,7 @@ def send(wrapped: RequestWrapper, socket: ssl.SSLSocket):
     subbed = wrapped.subscribed
 
     data = f"{id}\n{subbed}\n{req.serialize()}"
-    logger.info(f"Sending: {data}")
+    logger.info(f"Sending: {data if len(data) < MAX_DATA_LOG_LENGTH else data[:MAX_DATA_LOG_LENGTH] + '...[TRUNCATED]'}")
     encoded = data.encode()
     length = len(encoded).to_bytes(NUMBER_OF_LENGTH_BYTES, "big")
     socket.sendall(length + encoded)
@@ -38,7 +39,7 @@ def receive(socket: ssl.SSLSocket) -> tuple[Request, int, bool]:
     if length == 0:
         raise SocketClosedException(f"Socket was closed: {socket}")
     data = socket.recv(length).decode()
-    logger.info(f"Received: {data}")
+    logger.info(f"Received: {data if len(data) < MAX_DATA_LOG_LENGTH else data[:MAX_DATA_LOG_LENGTH] + '...[TRUNCATED]'}")
     id, subbed, req = data.split("\n", maxsplit=2)
     subbed = subbed == "True"
     return Request.deserialize(req), int(id), subbed

@@ -16,10 +16,11 @@ class ChannelsFrame(CTkScrollableFrame):
     def __init__(self, *args, channel_box: ChannelBox, client: Client, **kwargs):
         super().__init__(*args, corner_radius=0, fg_color="transparent", **kwargs)
 
-        self.current_guild: Guild | None = None
+        self._current_guild: Guild | None = None
         self._cb = channel_box
         self.client = client
         self.grid_columnconfigure(0, weight=1)
+        self._loading = False
 
         
         self._channels: list[ChannelButton] = []
@@ -39,17 +40,26 @@ class ChannelsFrame(CTkScrollableFrame):
         self._channels.clear()
         
         
-    def load(self):
-        if self.current_guild is None:
-            return
+    def load(self, new_guild: Guild) -> bool:
+        if new_guild == None:
+            logger.warning("Cannot load channels for None guild")
+            return False
         
+        if self._loading:
+            logger.warning("Already loading channels")
+            return False
+        
+        self._current_guild = new_guild
         self.clear_channels()
         
         def callback(channels: list[Channel]):
             for channel in channels:
                 self.add_channel(channel)
+            self._loading = False
     
-        self.client.get_channels(guild_id=self.current_guild.id, callback=callback)
+        self.client.get_channels(guild_id=self._current_guild.id, callback=callback)
+        self._loading = True
+        return True
         
     def unload(self):
         self.clear_channels()

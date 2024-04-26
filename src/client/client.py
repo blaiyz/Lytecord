@@ -6,7 +6,7 @@ from functools import wraps
 
 from src.shared.protocol import HOST
 from src.shared import *
-from src.client import RequestManager
+from src.client.request_manager import RequestManager
 
 
 
@@ -16,7 +16,7 @@ def ensure_correct_data(default, callback: Callable):
         def inner(req: Request):
             try:
                 func(req)
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, KeyError):
                 logger.debug(f"Invalid data: {req.data} from func: {func.__name__}")
                 callback(default)
         return inner
@@ -68,6 +68,18 @@ class Client():
                 callback([])
         
         request = Request(RequestType.GET_CHANNELS, {"guild_id": guild_id}, callback=c)
+        self.request_manager.request(request, callback=c)
+        
+    def get_messages(self, channel_id: int, from_id: int, count: int, callback: Callable[[list[Message]], None]):
+        @ensure_correct_data(default=[], callback=callback)
+        def c(req: Request):
+            if req.data["status"] == "success":
+                messages = [Message.from_dict(message) for message in req.data["messages"]]
+                callback(messages)
+            else:
+                callback([])
+        
+        request = Request(RequestType.GET_MESSAGES, {"channel_id": channel_id, "before": from_id, "count": count}, callback=c)
         self.request_manager.request(request, callback=c)
     
     def close(self):

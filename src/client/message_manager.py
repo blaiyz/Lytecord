@@ -3,6 +3,7 @@ import bisect
 from collections.abc import Callable
 from loguru import logger
 
+from src.client.client import Client
 from src.shared.channel import Channel
 from src.shared.message import Message, TAG_BIT_LENGTH
 
@@ -20,7 +21,7 @@ class MessageManager():
     It saves messages in a list and allows channel_box to take batches
     of messages from it, to improve performance.
     """
-    def __init__(self, client):
+    def __init__(self, client: Client):
         # Client will be the networking class
         self._client = client
         self._current_channel: Channel | None = None
@@ -29,34 +30,39 @@ class MessageManager():
         # Flag of whether reached the top of the channel (loaded all possible messages)
         self._top: bool = False
         
-    def set_channel(self, channel: Channel | None):
+    def set_channel(self, channel: Channel | None, received: Callable | None = None):
         if channel == self._current_channel:
             return
         self._messages.clear()
         self._channel = channel
         self._top = False
         if channel is not None:
-            self.fetch_messages()
+            self.fetch_messages(received=received)
         
     
-    def fetch_messages(self, from_id: int = 0, count: int = 100):
+    def fetch_messages(self, from_id: int = 0, count: int = 100, received: Callable | None = None):
         """
         Fetch messages from the server.
         
         If from_id is 0, fetches messages from the top.
         Fetches all the messages sent before the id.
+        
+        Calls the option received callback when the messages are received.
         """
         if self._channel is None:
             logger.warning("Tried to fetch messages from None channel, please set channel first")
             return
         
-        # Not implemented yet
-        self._top = True
-        for i in range(1, 150):
-            t = int(datetime.now().timestamp())
-            self.insert_sorted(Message((t << TAG_BIT_LENGTH) + i, self._channel.id, f"TEST {i}", 1, 1, t))
-        
-        #logger.debug("\n" + "\n".join([str(m) for m in self._messages]))
+        def callback(messages: list[Message]):
+            if messages == []:
+                self._top = True
+            for message in messages:
+                self.insert_sorted(message)
+            if received is not None:
+                received()
+                
+        logger.debug(f"Fetching messages from {from_id} with count {count}")
+        self._client.get_messages(self._channel.id, from_id, count, callback=callback)
         
             
     def get_messages(self, id: int, before = True, count: int = THRESHOLD - 5) -> list[Message]:
