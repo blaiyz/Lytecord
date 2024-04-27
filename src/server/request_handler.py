@@ -46,6 +46,8 @@ def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Reque
             res_data = get_messages(req.data, client)
         case RequestType.CHANNEL_SUBSCRIPTION if subbed:
             res_data = channel_sub_handler(req.data, client, id)
+        case RequestType.CHANNEL_SUBSCRIPTION if not subbed:
+            res_data = channel_unsub_handler(req.data, client)
         case RequestType.SEND_MESSAGE if not subbed:
             res_data = handle_new_message(req.data, client)
         case _:
@@ -127,24 +129,32 @@ def channel_sub_handler(data: dict, client: Client, subscription_id: int) -> dic
     if subtype == "subscribe":
         if subscription is not None:
             return {"status": "error", "message": "Already subscribed"}
+        
 
         # Change to actually check if channel exists
         channel_id = data["id"]
+        last_message_id = data["last_message_id"]
         channel: Channel = [c for c in TEST_DB["guilds"][0]["channels"] if c["channel"].id == channel_id][0]["channel"]
         subscription = ChannelSubscription(client, subscription_id, channel)
         client.current_channel = subscription
-        subscription.begin()
+        subscription.begin(last_message_id)
+        # For missed messages (if any)
+        subscription.wake_up()
         return {"status": "success", "message": f"Subscribed to channel {channel.name} with id: {channel.id}"}
-    
-    elif subtype == "unsubscribe":
+    return {"status": "error", "message": "Invalid subtype (use sub=false to unsubscribe)"}
+
+@ensure_correct_data
+def channel_unsub_handler(data: dict, client: Client) -> dict:
+    subscription = client.current_channel
+    subtype: str = data["subtype"]
+    if subtype == "unsubscribe":
         if subscription is None:
             return {"status": "error", "message": "Not subscribed"}
         
         subscription.stop()
         client.current_channel = None
         return {"status": "success", "message": "Unsubscribed"}
-    return {"status": "error", "message": "Invalid subtype"}
-
+    return {"status": "error", "message": "Invalid subtype (use sub=true to subscribe)"}
 
 @ensure_correct_data
 def handle_new_message(data: dict, client: Client) -> dict:

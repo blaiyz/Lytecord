@@ -29,7 +29,7 @@ def send(wrapped: RequestWrapper, socket: ssl.SSLSocket):
     subbed = wrapped.subscribed
 
     data = f"{id}\n{subbed}\n{req.serialize()}"
-    logger.info(f"Sending: {data if len(data) < MAX_DATA_LOG_LENGTH else data[:MAX_DATA_LOG_LENGTH] + '...[TRUNCATED]'}")
+    logger.info(f"Sending>>>>>>({socket.getpeername()})\n{data if len(data) < MAX_DATA_LOG_LENGTH else data[:MAX_DATA_LOG_LENGTH] + '...[TRUNCATED]'}")
     encoded = data.encode()
     length = len(encoded).to_bytes(NUMBER_OF_LENGTH_BYTES, "big")
     socket.sendall(length + encoded)
@@ -39,7 +39,7 @@ def receive(socket: ssl.SSLSocket) -> tuple[Request, int, bool]:
     if length == 0:
         raise SocketClosedException(f"Socket was closed: {socket}")
     data = socket.recv(length).decode()
-    logger.info(f"Received: {data if len(data) < MAX_DATA_LOG_LENGTH else data[:MAX_DATA_LOG_LENGTH] + '...[TRUNCATED]'}")
+    logger.info(f"Received<<<<<<({socket.getpeername()})\n{data if len(data) < MAX_DATA_LOG_LENGTH else data[:MAX_DATA_LOG_LENGTH] + '...[TRUNCATED]'}")
     id, subbed, req = data.split("\n", maxsplit=2)
     subbed = subbed == "True"
     return Request.deserialize(req), int(id), subbed

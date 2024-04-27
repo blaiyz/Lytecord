@@ -23,7 +23,9 @@ def main():
         client = Client(client_sock)
         logger.info(f"Client connected: {addr}")
         # Creating and running an event loop in a separate thread
-        threading.Thread(target=client.main_handler, daemon=True).start()
+        t = threading.Thread(target=client.main_handler, daemon=True)
+        t.name = f"Client handler thread; port: {client_sock.getpeername()[1]}"
+        t.start()
         
         
 if __name__ == "__main__":

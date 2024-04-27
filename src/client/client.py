@@ -27,6 +27,7 @@ def ensure_correct_data(default, callback: Callable):
 class Subscription:
     channel: Channel | None
     id: int | None
+    last_message_id: int = 0
 
 class Client():
     def __init__(self, ip: str, port: int):
@@ -81,6 +82,7 @@ class Client():
         def c(req: Request):
             if req.data["status"] == "success":
                 messages = [Message.from_dict(message) for message in req.data["messages"]]
+                self.subscription.last_message_id = messages[0].id
                 callback(messages)
             else:
                 callback([])
@@ -108,7 +110,7 @@ class Client():
             else:
                 self.subscription.id = None
         
-        request = Request(RequestType.CHANNEL_SUBSCRIPTION, {"subtype": "subscribe", "id": c_id})
+        request = Request(RequestType.CHANNEL_SUBSCRIPTION, {"subtype": "subscribe", "id": c_id, "last_message_id": self.subscription.last_message_id})
         self.subscription.id = self.request_manager.subscribe(request, callback=c)
         
     def unsubscribe_channel(self):
@@ -116,9 +118,11 @@ class Client():
             logger.warning("Not subscribed to any channel")
             return
         
-        self.request_manager.unsubscribe(self.subscription.id, Request(RequestType.CHANNEL_SUBSCRIPTION, {"subtype": "unsubscribe"}))
+        id = self.subscription.id
         self.subscription.channel = None
         self.subscription.id = None
+        self.subscription.last_message_id = 0
+        self.request_manager.unsubscribe(id, Request(RequestType.CHANNEL_SUBSCRIPTION, {"subtype": "unsubscribe"}))
         
     def send_message(self, message: Message, callback: Callable[[Message | None], None]):
         if self.subscription.channel is None:

@@ -24,18 +24,21 @@ class MessageManager():
     def __init__(self, client: Client):
         # Client will be the networking class
         self._client = client
-        self._current_channel: Channel | None = None
+        self._channel: Channel | None = None
         self._messages: list[Message] = []
         self.new_message_callback: Callable | None = None
         # Flag of whether reached the top of the channel (loaded all possible messages)
         self._top: bool = False
         
     def set_channel(self, channel: Channel | None, received: Callable | None = None):
-        if channel == self._current_channel:
+        logger.debug(f"Setting channel to {channel}")
+        if channel == self._channel:
             return
         
-        if self._current_channel is not None:
+        if self._channel is not None:
             self._client.unsubscribe_channel()
+            logger.debug("unsubscribed")
+            
         self._messages.clear()
         self._channel = channel
         self._top = False
@@ -47,8 +50,6 @@ class MessageManager():
                     received()
                 
             self.fetch_messages(received=callback)
-        else:
-            self._client.unsubscribe_channel()
         
     
     def fetch_messages(self, from_id: int = 0, count: int = 100, received: Callable | None = None):

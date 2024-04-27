@@ -40,7 +40,7 @@ class ServerChannel:
                 self._buffer.pop()
             for sub in self._subscriptions:
                 if sub != sender:
-                    logger.debug(f"Sending message to {sub}")
+                    logger.debug(f"waking up {sub}")
                     sub.wake_up()
                     
     def get_messages(self, after: int):
@@ -48,13 +48,17 @@ class ServerChannel:
         Return messages after the given id
         """
         with self._lock:
-            if self.is_empty():
+            if len(self._subscriptions) == 0:
                 return []
             
-            if self._buffer[0].id >= after:
+            if len(self._buffer) == 0:
+                return []
+            
+            if self._buffer[0].id < after:
                 return []
             
             index = bisect.bisect_left(self._buffer, -after, key=lambda x: x.sort_key())
+            logger.debug(f"Index: {index}, buffer: {self._buffer}")
             return self._buffer[:index]
             
         

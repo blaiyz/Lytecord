@@ -141,13 +141,13 @@ class TextChannel(CTkFrame):
         #logger.debug("time2")
         
         if not top:
-            logger.debug(f"parent canvas {self._messages_frame._parent_canvas.winfo_height()}")
+            #logger.debug(f"parent canvas {self._messages_frame._parent_canvas.winfo_height()}")
             relative_pos -= self._messages_frame._parent_canvas.winfo_height()
         
-        logger.debug(f"calculating: {relative_pos}, {message_frame.winfo_y()}, {self._messages_frame.winfo_height()}")
+        #logger.debug(f"calculating: {relative_pos}, {message_frame.winfo_y()}, {self._messages_frame.winfo_height()}")
         calculated_pos = (relative_pos + message_frame.winfo_y()) / self._messages_frame.winfo_height()
         
-        logger.debug(f"calculated_pos: {calculated_pos}")
+        #logger.debug(f"calculated_pos: {calculated_pos}")
         self._messages_frame._parent_canvas.yview_moveto(calculated_pos)
         
         if stick:
@@ -173,7 +173,7 @@ class TextChannel(CTkFrame):
             logger.warning("Tried to load 0 messages")
             return
         
-        logger.debug(f"loading {len(messages)} messages, from_top: {from_top}, stick: {stick}")
+        #logger.debug(f"loading {len(messages)} messages, from_top: {from_top}, stick: {stick}")
         self._scroll_lock = True
 
         
@@ -199,16 +199,11 @@ class TextChannel(CTkFrame):
             self._regrid(temp, from_top, stick=bottom_message)
         else:
             self._regrid(temp, from_top)
-        logger.debug(f"y: {bottom_message.winfo_y()}, bottom_message: {bottom_message.message.content}:{bottom_message}")
-        logger.debug(f"top_message y: {self._message_list[-1].winfo_y()}")
+        #logger.debug(f"y: {bottom_message.winfo_y()}, bottom_message: {bottom_message.message.content}:{bottom_message}")
+        #logger.debug(f"top_message y: {self._message_list[-1].winfo_y()}")
         
         self._scroll_lock = False
-#         logger.debug(f"""Loaded {len(messages)} messages
 
-# {"\n".join([str(m) for m in messages])}
-
-# {"\n".join([str(m.grid_info()) for m in self._message_list])}""")
-        
 
     def _regrid(self, new_message_frames: list[MessageFrame], from_top: bool, stick: MessageFrame | None = None):
         """
@@ -224,7 +219,7 @@ class TextChannel(CTkFrame):
         was_empty = total == count
         
         
-        logger.debug(f"regridding: {from_top}, {self._top_row}, {self._bottom_row}, count: {count}, total: {total}")
+        #logger.debug(f"regridding: {from_top}, {self._top_row}, {self._bottom_row}, count: {count}, total: {total}")
         #logger.debug("\n".join([f"{frame.message.content}:{frame}" for frame in self._message_list]))
         
         if total < MAX_MESSAGES and self._top_row >= MIN_ROW and self._bottom_row <= MAX_ROW:
@@ -255,7 +250,7 @@ class TextChannel(CTkFrame):
             self._messages_frame._parent_canvas.configure(scrollregion=self._messages_frame._parent_canvas.bbox("all"))
 
 
-            logger.debug(f"regridding2: {from_top}, {self._top_row}, {self._bottom_row}, {total}")
+            #logger.debug(f"regridding2: {from_top}, {self._top_row}, {self._bottom_row}, {total}")
             if from_top:
                 if not was_empty:
                     prev_top_frame = self._message_list[-count - 1]
@@ -305,14 +300,14 @@ class TextChannel(CTkFrame):
         yview = self._messages_frame._parent_canvas.yview()
         if yview[0] == 0.0:
             #logger.debug(f"scroll callback {yview}")
-            logger.debug(f"loading from top m:{self._message_list[-1].message.content}")
+            #logger.debug(f"loading from top m:{self._message_list[-1].message.content}")
             messages = self._mm.get_messages(id=self._message_list[-1].message.id, before=True, count=LOAD_COUNT)
             #logger.debug(f"loading from top\n"+"\n".join([m.content for m in messages]))
             if len(messages) != 0:
                 self._load_messages(messages, from_top=True)
         elif yview[1] == 1.0:
             #logger.debug(f"scroll callback {yview}")
-            logger.debug(f"loading from bottom m:{self._message_list[0].message.content}")
+            #logger.debug(f"loading from bottom m:{self._message_list[0].message.content}")
             messages = self._mm.get_messages(id=self._message_list[0].message.id, before=False, count=LOAD_COUNT)
             #logger.debug(f"loading from bottom\n"+"\n".join([m.content for m in messages]))
             if len(messages) != 0:

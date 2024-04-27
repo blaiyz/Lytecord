@@ -14,6 +14,7 @@ from src.shared.protocol import RequestWrapper
 class Client():
     def __init__(self, socket: SSLSocket):
         self._socket = socket
+        self.name = socket.getpeername()
         self.user: User | None = None
         self._response_queue: Queue[RequestWrapper] = Queue()
         self._condition = threading.Condition()
@@ -54,6 +55,7 @@ class Client():
         
     def main_handler(self):
         t = threading.Thread(target=self._receiver_thread, daemon=True)
+        t.name = f"Client receiver thread; port: {self.name[1]}"
 
         try:
             t.start()
