@@ -71,10 +71,18 @@ class AbsDataClass(ABC, Serializeable):
             logger.error(f"ID ({self.id}) cannot be less than 0")
             raise ValueError("ID cannot be less than 0")
         
+    def to_db_dict(self):
+        """
+        Same as to_dict, but renames the id field to _id (for mongodb).
+        """
+        d = {k.strip("_") if k != 'id' else '_id': v.to_dict() if isinstance(v, Serializeable) else v for k, v in self.__dict__.items()}
+        return d
+
+    @classmethod
+    def from_db_dict(cls: Type[T], data: dict[str, Any]) -> T:
+        data["id"] = data.pop("_id")
+        return cls.from_dict(data)
 
     def __str__(self):
         return json.dumps(self, cls=Encoder, separators=(",",":"))
     
-
-
-        
