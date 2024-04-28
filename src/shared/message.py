@@ -1,6 +1,7 @@
 from loguru import logger
 from dataclasses import dataclass
 from src.shared.abs_data_class import AbsDataClass
+from src.shared.user import User
 
 MAX_MESSAGE_LENGTH = 1500
 TAG_BIT_LENGTH = 22
@@ -14,7 +15,7 @@ class Message(AbsDataClass):
     content: str
     # attachment_id is 0 if there is no attachment
     attachment_id: int
-    author_id: int
+    author: User
     timestamp: int
 
     def __post_init__(self):
@@ -28,9 +29,6 @@ class Message(AbsDataClass):
         if self.attachment_id < 0:
             logger.error(f"Attachment ID ({self.attachment_id}) cannot beless than 0")
             raise ValueError("Attachment ID cannot be less than 0")
-        if self.author_id <= 0:
-            logger.error(f"Author ID ({self.author_id}) cannot be less than or equal to 0")
-            raise ValueError("Author ID cannot be less than or equal to 0")
         if self.timestamp <= 0:
             logger.error(f"Timestamp ({self.timestamp}) cannot be less than or equal to 0")
             raise ValueError("Timestamp cannot be less than or equal to 0")

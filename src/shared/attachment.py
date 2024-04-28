@@ -3,7 +3,7 @@ from enum import Enum
 from turtle import width
 from loguru import logger
 from dataclasses import dataclass
-from src.shared.abs_data_class import AbsDataClass
+from src.shared.abs_data_class import AbsDataClass, Serializeable
 from io import BytesIO
 from PIL import Image
 
@@ -12,12 +12,19 @@ MAX_WIDTH = 2**12
 MAX_HEIGHT = 2**12
 
 
-class AttachmentType(Enum):
+class AttachmentType(Serializeable, Enum):
     IMAGE = 0
     OTHER = 1
 
     def __str__(self):
         return self.name.lower()
+    
+    def to_json_serializeable(self):
+        return self.name.lower()
+    
+    @classmethod
+    def deserialize(cls, string: str):
+        return cls[string.upper()]
     
 
 @dataclass(frozen=True)

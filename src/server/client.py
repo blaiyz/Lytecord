@@ -19,6 +19,7 @@ class Client():
         self._response_queue: Queue[RequestWrapper] = Queue()
         self._condition = threading.Condition()
         self._stop = False
+        self.current_user: User | None = None
         
         # Sorry :(
         from src.server import channel_manager
@@ -41,7 +42,12 @@ class Client():
             # Circular import fix
             from src.server import request_handler
             
-            response = request_handler.handle_request(request, id, subbed, self)
+            try:
+                response = request_handler.handle_request(request, id, subbed, self)
+            except Exception as e:
+                logger.exception(f"Caught unexpected exception in receiver thread: {e}")
+                response = Request(RequestType.ERROR, {"message": "Internal server error"})
+                
             wrapped = RequestWrapper(response, id, None, subbed)
             self._response_queue.put(wrapped)
             with self._condition:

@@ -12,22 +12,22 @@ T = TypeVar("T", bound="Serializeable")
 class Encoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, Serializeable):
-            return o.to_dict()
+            return o.to_json_serializeable()
         return super().default(o)
     
 
-# Some type shenanigans, see from_dict method    
+# Some type shenanigans, see from_json_serializeable method    
 def all_annotations(cls) -> ChainMap:
     """Returns a dictionary-like ChainMap that includes annotations for all 
     attributes defined in cls or inherited from superclasses."""
     return ChainMap(*(c.__annotations__ for c in cls.__mro__ if '__annotations__' in c.__dict__) )    
 
 class Serializeable:
-    def to_dict(self):
-        return {k.strip("_"): v for k, v in self.__dict__.items()}
+    def to_json_serializeable(self):
+        return {k.strip("_"): v.to_json_serializeable() if isinstance(v, Serializeable) else v for k, v in self.__dict__.items()}
     
     @classmethod
-    def from_dict(cls: Type[T], data: dict[str, Any]) -> T:
+    def from_json_serializeable(cls: Type[T], data: dict[str, Any]) -> T:
         """
         Used for converting a dictionary to an instance of the class,
         after deserializing data to a dictionary.
@@ -39,13 +39,19 @@ class Serializeable:
             # Create a new dictionary with the data converted to the correct types
             converted_data = {}
             for field, value in data.items():
-                if isinstance(data[field], Serializeable):
-                    converted_data[field] = field_types[field](value).from_dict(value)
+                field_type = field_types[field]
+                #logger.debug(f"Field: {field}, Value: {value}, Type: {field_type}")
+                if issubclass(field_type, Serializeable):
+                    if isinstance(value, dict):
+                        converted_data[field] = field_type.from_json_serializeable(value)
+                    else:
+                        converted_data[field] = field_type(value)
                 else:
-                    converted_data[field] = field_types[field](value)
+                    converted_data[field] = field_type(value)
             # Create a new instance of the class with the converted data
             return cls(**converted_data)
-        except (KeyError, TypeError):
+        except (KeyError, TypeError) as e:
+            logger.debug(f"Cannot convert from data: {e} at class {cls}")
             raise ValueError(f"Data cannot be converted to {cls.__name__}")
     
     @staticmethod
@@ -73,15 +79,17 @@ class AbsDataClass(ABC, Serializeable):
         
     def to_db_dict(self):
         """
-        Same as to_dict, but renames the id field to _id (for mongodb).
+        Returns a dictionary with the data of the class, with the id renamed to _id.
+        Supports nested data classes, as long as they inherit from Serializeable.
         """
-        d = {k.strip("_") if k != 'id' else '_id': v.to_dict() if isinstance(v, Serializeable) else v for k, v in self.__dict__.items()}
+        d = {k.strip("_") if k != 'id' else '_id': v.to_json_serializeable() if isinstance(v, Serializeable) else v for k, v in self.__dict__.items()}
         return d
 
     @classmethod
     def from_db_dict(cls: Type[T], data: dict[str, Any]) -> T:
+        #logger.debug(f"From db dict: {data} at class {cls}")
         data["id"] = data.pop("_id")
-        return cls.from_dict(data)
+        return cls.from_json_serializeable(data)
 
     def __str__(self):
         return json.dumps(self, cls=Encoder, separators=(",",":"))

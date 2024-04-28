@@ -57,7 +57,7 @@ class Client():
         @ensure_correct_data(default=[], callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
-                guilds = [Guild.from_dict(guild) for guild in req.data["guilds"]]
+                guilds = [Guild.from_json_serializeable(guild) for guild in req.data["guilds"]]
                 callback(guilds)
             else:
                 callback([])
@@ -69,7 +69,7 @@ class Client():
         @ensure_correct_data(default=[], callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
-                channels = [Channel.from_dict(channel) for channel in req.data["channels"]]
+                channels = [Channel.from_json_serializeable(channel) for channel in req.data["channels"]]
                 callback(channels)
             else:
                 callback([])
@@ -81,8 +81,9 @@ class Client():
         @ensure_correct_data(default=[], callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
-                messages = [Message.from_dict(message) for message in req.data["messages"]]
-                self.subscription.last_message_id = messages[0].id
+                messages = [Message.from_json_serializeable(message) for message in req.data["messages"]]
+                if len(messages) > 0:
+                    self.subscription.last_message_id = messages[0].id
                 callback(messages)
             else:
                 callback([])
@@ -100,7 +101,7 @@ class Client():
         @ensure_correct_data(default=None, callback=callback)
         def c(req: Request):
             if confirmation["status"]:
-                message = Message.from_dict(req.data["message"])
+                message = Message.from_json_serializeable(req.data["message"])
                 callback(message)
                 return
             
@@ -132,7 +133,7 @@ class Client():
         @ensure_correct_data(default=None, callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
-                message = Message.from_dict(req.data["message"])
+                message = Message.from_json_serializeable(req.data["message"])
                 callback(message)
             else:
                 callback(None)

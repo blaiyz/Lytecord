@@ -52,7 +52,7 @@ class MessageManager():
             self.fetch_messages(received=callback)
         
     
-    def fetch_messages(self, from_id: int = 0, count: int = 100, received: Callable | None = None):
+    def fetch_messages(self, from_id: int = 0, count: int = 50, received: Callable | None = None):
         """
         Fetch messages from the server.
         
@@ -110,7 +110,7 @@ class MessageManager():
             
             # If trying to get messages before the oldest message (that is currently fetched)
             if self._messages[-1].id >= id:
-                ret = []
+                return []
             else:
                 #logger.debug(f"id: {id}, Messages\n" + "\n".join([str(m) for m in self._messages]))
                 
@@ -121,7 +121,7 @@ class MessageManager():
             
             # If the user is getting close or reached the top, fetch more messages
             if not self._top and (len(self._messages) - (index + count) < THRESHOLD or ret == []):
-                self.fetch_messages(from_id= self._messages[-1].id)
+                self.fetch_messages(from_id=self._messages[-1].id)
             
             return ret
             

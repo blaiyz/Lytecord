@@ -75,12 +75,19 @@ class RequestManager():
         while self._continue:
             try:
                 req, id, subbed = protocol.receive(self._sock)
+                error = req.request_type == RequestType.ERROR
+                if error:
+                    logger.warning(f"Received error from server: {req.data['message']}")
 
                 if subbed:
                     with self._subscribed_lock:
                         wrapped = self._subscribed_requests.get(id, None)
                         if not wrapped:
                             continue
+                        if error:
+                            logger.warning(f"From subscribed request: {wrapped.request.request_type} {wrapped.request.data}")
+                            continue
+                        
                         if wrapped.callback:
                             wrapped.callback(req)
                         
@@ -89,10 +96,17 @@ class RequestManager():
                         wrapped = self._normal_requests.pop(id, None)
                         if not wrapped:
                             continue
+                        if error:
+                            logger.warning(f"From regular request: {wrapped.request.request_type} {wrapped.request.data}")
+                            continue
+                            
                         if wrapped.callback:
                             wrapped.callback(req)
             except SocketClosedException:
                 logger.warning("Socket closed")
+                break
+            except Exception as e:
+                logger.exception(f"Caught exception in receiver: {e}")
                 break
             
     def request(self, req: Request, callback: Callable[[Request], None]):

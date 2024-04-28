@@ -2,34 +2,15 @@ import functools
 from loguru import logger
 import bisect
 from datetime import datetime as dt
+from pymongo.errors import PyMongoError
 
 from src.server.channel_subscription import ChannelSubscription
 from src.shared import *
 from src.server.client import Client
 from src.server import channel_manager
 from src.server.channel_manager import ServerChannel
-
-
-TEMPORARY_GUILD_ID = 7189299954974720
-TEMPORARY_MESSAGE_ID = 7189649445355520
-
-
-TEST_DB = {
-    "guilds": [ 
-            {
-            "guild": Guild(TEMPORARY_GUILD_ID, "Test Guild"),
-            "channels": [ {
-                    "channel": Channel(TEMPORARY_GUILD_ID + i, f"test channel {i}", ChannelType.TEXT, TEMPORARY_GUILD_ID),
-                    "messages": [
-                        Message(TEMPORARY_MESSAGE_ID + i, TEMPORARY_GUILD_ID + i, f"Test message {i}", 0, 1, TEMPORARY_MESSAGE_ID >> 22)
-                        for i in range(300, 0, -1)
-                    ]
-                }
-                for i in range(1, 6)
-            ]
-        }
-    ]
-}
+from src.server import db
+from src.server import asset_generator
 
 
 def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Request:
@@ -37,7 +18,7 @@ def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Reque
     
     match req_type:
         case RequestType.AUTHENTICATION if not subbed:
-            res_data = authenticate(req.data)
+            res_data = authenticate(req.data, client)
         case RequestType.GET_GUILDS if not subbed:
             res_data = get_guilds(req.data, client)
         case RequestType.GET_CHANNELS if not subbed:
@@ -60,16 +41,23 @@ def ensure_correct_data(func):
     def wrapper(data, *args, **kwargs):
         try:
             return func(data, *args, **kwargs)
-        except (TypeError, ValueError, KeyError):
-            logger.debug(f"Invalid data: {data} from func: {func.__name__}")
+        except (TypeError, ValueError, KeyError) as e:
+            logger.debug(f"Exception: {e} Invalid data: {data} from func: {func.__name__}")
             return {"status": "error", "message": "Invalid data"}
+        except PyMongoError as e:
+            logger.error(f"Database error: {e}")
+            return {"status": "error", "message": "Database error"}
     return wrapper
             
 
 @ensure_correct_data
-def authenticate(data: dict) -> dict:
+def authenticate(data: dict, client: Client) -> dict:
     username: str = data["username"]
     password: str = data["password"]
+    
+    user = db.users.find_one()
+    assert user is not None
+    client.user = User.from_db_dict(user)
     
     # Temporary
     if username == "" and password == "":
@@ -81,7 +69,7 @@ def authenticate(data: dict) -> dict:
 @ensure_correct_data
 def get_guilds(data: dict, client: Client) -> dict:
     # Check later for user
-    guilds = [guild_db["guild"] for guild_db in TEST_DB["guilds"]]
+    guilds = db.get_guilds()
     return {"status": "success", "guilds": guilds}
 
 # Temporary function
@@ -89,12 +77,11 @@ def get_guilds(data: dict, client: Client) -> dict:
 def get_channels(data: dict, client: Client) -> dict:
     guild_id: int = data["guild_id"]
     
-    if guild_id != TEMPORARY_GUILD_ID:
+    channels = db.get_channels(guild_id)
+    if len(channels) == 0:
+        if db.does_guild_exist(guild_id):
+            return {"status": "success", "channels": []}
         return {"status": "error", "message": "Invalid guild id"}
-    
-    channel_db = TEST_DB["guilds"][0]["channels"]
-    
-    channels = [c["channel"] for c in channel_db]
     return {"status": "success", "channels": channels}
 
 # Temporary function
@@ -106,17 +93,12 @@ def get_messages(data: dict, client: Client) -> dict:
     
     logger.debug(f"Getting messages before {before} in channel {channel_id}")
     
-    all_messages: list[Message] = [c for c in TEST_DB["guilds"][0]["channels"] if c["channel"].id == channel_id][0]["messages"]
+    messages = db.get_messages(channel_id, before, count)
     
-    if before == 0:
-        messages = all_messages[:count]
-    else:
-        if all_messages[-1].id >= before:
-            messages = []
-        else:
-            index = bisect.bisect_right(all_messages, -before, key=lambda x: x.sort_key())
-            logger.debug(f"Index: {index}, i+c: {min(index + count, len(all_messages))}")
-            messages = all_messages[index:min(index + count, len(all_messages))]
+    if len(messages) == 0:
+        if db.does_channel_exist(channel_id):
+            return {"status": "success", "messages": []}
+        return {"status": "error", "message": "Invalid channel id"}
         
     return {"status": "success", "messages": messages}
 
@@ -131,13 +113,17 @@ def channel_sub_handler(data: dict, client: Client, subscription_id: int) -> dic
             return {"status": "error", "message": "Already subscribed"}
         
 
-        # Change to actually check if channel exists
         channel_id = data["id"]
         last_message_id = data["last_message_id"]
-        channel: Channel = [c for c in TEST_DB["guilds"][0]["channels"] if c["channel"].id == channel_id][0]["channel"]
+        try:
+            channel: Channel = db.get_channel(channel_id)
+        except ValueError:
+            return {"status": "error", "message": "Invalid channel id"}
+        
         subscription = ChannelSubscription(client, subscription_id, channel)
         client.current_channel = subscription
         subscription.begin(last_message_id)
+        
         # For missed messages (if any)
         subscription.wake_up()
         return {"status": "success", "message": f"Subscribed to channel {channel.name} with id: {channel.id}"}
@@ -158,13 +144,16 @@ def channel_unsub_handler(data: dict, client: Client) -> dict:
 
 @ensure_correct_data
 def handle_new_message(data: dict, client: Client) -> dict:
+    if client.user is None:
+        return {"status": "error", "message": "Not logged in"}
     if client.current_channel is None:
         return {"status": "error", "message": "Not subscribed to any channel"}
     
     channel = client.current_channel.channel
     content = data["message"]["content"]
-    t = int(dt.now().timestamp())
-    message = Message(t << 22, channel.id, content, 0, 1, t)
+    
+    message = asset_generator.generate_message(channel.id, content, 0, client.user)
+    
     if client.current_channel.send_message(message):
         return {"status": "success", "message": message}
     return {"status": "error", "message": "Failed to send message"}

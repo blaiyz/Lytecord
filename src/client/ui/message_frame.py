@@ -4,6 +4,7 @@ import tkinter as tk
 from datetime import datetime
 from loguru import logger
 
+from src.client.client import Client
 from src.shared.message import Message
 
 FONT_SIZE = 14
@@ -11,14 +12,14 @@ FONT_SIZE = 14
 
 class MessageFrame(CTkFrame):
     FONT = None
-    def __init__(self, *args, message: Message, client, **kwargs):
+    def __init__(self, *args, message: Message, client: Client, **kwargs):
         super().__init__(*args, **kwargs)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
         self.message = message
         self._client = client
-        self._author_name = "Author" # Fetching name will be implemented later
+        self._author_name = message.author.username # Fetching name will be implemented later
         self._author_label = CTkLabel(self, text=self._author_name, font=CTkFont(size=FONT_SIZE+2, weight="bold"))
         self._author_label.grid(row=0, column=0, sticky="w", padx=10, pady=1)
 

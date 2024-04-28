@@ -7,9 +7,12 @@ class ChannelType(Serializeable, Enum):
     TEXT = "text"
     VIDEO = "video"
     
-    def to_dict(self):
-        return self.value
+    def to_json_serializeable(self):
+        return self.name.lower()
     
+    @classmethod
+    def from_json_serializeable(cls, data: dict[str, str]):
+        return ChannelType[data["type"].upper()]
     @classmethod
     def deserialize(cls, string: str):
         return cls[string.upper()]
