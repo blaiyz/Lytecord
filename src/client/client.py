@@ -1,3 +1,5 @@
+from customtkinter import CTk
+
 from dataclasses import dataclass
 import ssl
 import socket
@@ -52,13 +54,15 @@ class Client():
         # Deal with certificate verification later
         self.context = ssl._create_unverified_context()
         self.sock = self.context.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), server_hostname=self.ip)
-        self.sock.connect((self.ip, self.port))
-        self.sock.setblocking(True)
-        self.request_manager = RequestManager(self.sock)
-        self.request_manager.begin()
-        
+
         self.user: User | None = None
         self.subscription = Subscription(None, None)
+        
+    def begin(self, app: CTk):
+        self.sock.connect((self.ip, self.port))
+        self.sock.setblocking(True)
+        self.request_manager = RequestManager(self.sock, app)
+        self.request_manager.begin()
         
         
     def authenticate(self, subtype: AuthType, username: str, password: str, callback: Callable[[bool, str], None]):
@@ -175,10 +179,3 @@ class Client():
         
     def default_callback(self, req: Request):
         print(req)
-    
-
-    
-if __name__ == "__main__":
-    client = Client(*HOST)
-    client.send(Request(RequestType.AUTHENTICATION, Channel(123, "test", ChannelType.TEXT, 123)))
-    print("Done")

@@ -1,5 +1,7 @@
 from threading import Lock
 from datetime import datetime as dt
+import random
+import string
 
 from src.server import db
 from src.shared import Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType
@@ -10,6 +12,9 @@ tag = 0
 # The number of bits reserved for the tag
 TAG_LENGTH = 22
 
+
+def _get_random_hex_code(length=16):
+    return ''.join(random.choices(string.hexdigits, k=length))
 
 def get_id() -> int:
     global tag
@@ -22,8 +27,16 @@ def generate_guild(name: str, owner_id: int) -> Guild:
     if db.users.find_one({"_id": owner_id}) is None:
         raise ValueError(f"User with id {owner_id} does not exist")
     
+    join_code = _get_random_hex_code()
+    while db.guilds.find_one({"join_code": join_code}) is not None:
+        join_code = _get_random_hex_code()
+    
     g = Guild(get_id(), name, owner_id)
-    db.guilds.insert_one(g.to_db_dict())
+    d = g.to_db_dict()
+    d["users"] = []
+    d["join_code"] = join_code
+    db.guilds.insert_one(d)
+    db.user_join_guild(owner_id, g.id)
     return g
 
 def generate_channel(name: str, channel_type: ChannelType, guild_id: int) -> Channel:
@@ -36,7 +49,9 @@ def generate_channel(name: str, channel_type: ChannelType, guild_id: int) -> Cha
 
 def generate_user(name: str, password_hash: str) -> User:
     u = User(get_id(), name)
-    db.users.insert_one(u.to_db_dict())
+    d = u.to_db_dict()
+    d["joined_guilds"] = []
+    db.users.insert_one(d)
     db.passwords.insert_one({"_id": u.id, "password_hash": password_hash})
     return u
 

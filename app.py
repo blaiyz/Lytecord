@@ -1,4 +1,5 @@
 from sys import stderr
+from tkinter import Tk
 import customtkinter
 from loguru import logger
 from PIL import Image
@@ -26,7 +27,6 @@ MIN_WIDTH = 0
 MIN_HEIGHT = 0
 START_WIDTH = 600
 START_HEIGHT = 600
-
 
 
 class App(customtkinter.CTk):
@@ -126,5 +126,6 @@ class AppState(Enum):
 if __name__ == "__main__":
     client = Client(*HOST)
     app = App(client = client)
+    client.begin(app)
     app.mainloop()
     client.close()

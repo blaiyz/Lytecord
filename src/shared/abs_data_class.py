@@ -35,10 +35,13 @@ class Serializeable:
         try:
             # Get the types of the fields
             field_types = all_annotations(cls)
+            field_names = field_types.keys()
             #logger.debug(f"Field types: {field_types}")
             # Create a new dictionary with the data converted to the correct types
             converted_data = {}
             for field, value in data.items():
+                if field not in field_names:
+                    continue
                 field_type = field_types[field]
                 #logger.debug(f"Field: {field}, Value: {value}, Type: {field_type}")
                 if issubclass(field_type, Serializeable):

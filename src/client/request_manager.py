@@ -1,3 +1,5 @@
+from customtkinter import CTk
+
 from queue import Queue
 import socket
 import ssl
@@ -19,8 +21,9 @@ MAX_ID = 2**10
 
 
 class RequestManager():
-    def __init__(self, socket: ssl.SSLSocket):
+    def __init__(self, socket: ssl.SSLSocket, app: CTk):
         self._sock = socket
+        self._app = app
         self._continue = False
         # outgoing
         self._requests: Queue[RequestWrapper] = Queue()
@@ -89,7 +92,7 @@ class RequestManager():
                             continue
                         
                         if wrapped.callback:
-                            wrapped.callback(req)
+                            self._app.after_idle(wrapped.callback, req)
                         
                 else:
                     with self._normal_lock:
@@ -101,7 +104,7 @@ class RequestManager():
                             continue
                             
                         if wrapped.callback:
-                            wrapped.callback(req)
+                            self._app.after_idle(wrapped.callback, req)
             except SocketClosedException:
                 logger.warning("Socket closed")
                 break

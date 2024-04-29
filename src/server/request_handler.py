@@ -67,7 +67,7 @@ def authenticate(data: dict, client: Client) -> dict:
         
         try:
             user = db.get_user_by_name(username)
-        except ValueError:
+        except KeyError:
             # Username not found
             return {"status": "error", "message": "Invalid credentials"}
         
@@ -96,8 +96,10 @@ def authenticate(data: dict, client: Client) -> dict:
 # Temporary function
 @ensure_correct_data
 def get_guilds(data: dict, client: Client) -> dict:
-    # Check later for user
-    guilds = db.get_guilds()
+    if client.user is None:
+        return {"status": "error", "message": "Not logged in"}
+
+    guilds = db.get_user_guilds(client.user.id)
     return {"status": "success", "guilds": guilds}
 
 # Temporary function
@@ -145,7 +147,7 @@ def channel_sub_handler(data: dict, client: Client, subscription_id: int) -> dic
         last_message_id = data["last_message_id"]
         try:
             channel: Channel = db.get_channel(channel_id)
-        except ValueError:
+        except KeyError:
             return {"status": "error", "message": "Invalid channel id"}
         
         subscription = ChannelSubscription(client, subscription_id, channel)
