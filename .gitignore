@@ -1,4 +1,5 @@
 .vscode/
+.VSCodeCounter/
 examples/
 
 cert.pem

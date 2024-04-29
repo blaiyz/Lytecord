@@ -1,8 +1,4 @@
-from re import S
 import socket
-import ssl
-import threading
-import asyncio
 from loguru import logger
 
 from src.shared import Request
@@ -23,7 +19,7 @@ class RequestWrapper():
         self.callback = callback
         self.subscribed = subscribed
 
-def send(wrapped: RequestWrapper, socket: ssl.SSLSocket):
+def send(wrapped: RequestWrapper, socket: socket.socket):
     id = wrapped.id
     req = wrapped.request
     subbed = wrapped.subscribed
@@ -34,7 +30,7 @@ def send(wrapped: RequestWrapper, socket: ssl.SSLSocket):
     logger.info(f"Sending {len(encoded)} bytes>>>>>>({socket.getpeername()})\n{data if len(data) < MAX_DATA_LOG_LENGTH else data[:MAX_DATA_LOG_LENGTH] + '...[TRUNCATED]'}")
     socket.sendall(length + encoded)
 
-def receive(socket: ssl.SSLSocket) -> tuple[Request, int, bool]:
+def receive(socket: socket.socket) -> tuple[Request, int, bool]:
     length = int.from_bytes(socket.recv(NUMBER_OF_LENGTH_BYTES), "big")
     if length == 0:
         raise SocketClosedException(f"Socket was closed: {socket}")

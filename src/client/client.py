@@ -4,10 +4,12 @@ import socket
 from typing import Callable
 from loguru import logger
 from functools import wraps
+from enum import Enum
 
 from src.shared.protocol import HOST
-from src.shared import *
+from src.shared import Request, RequestType, Channel, ChannelType, Guild, Message, login_utils
 from src.client.request_manager import RequestManager
+from src.shared.user import User
 
 
 
@@ -28,6 +30,20 @@ class Subscription:
     channel: Channel | None
     id: int | None
     last_message_id: int = 0
+    
+    
+class AuthType(Enum):
+    LOGIN = "login"
+    REGISTER = "register"
+    
+    def opp(self):
+        """
+        Returns the oppsite of the current mode.
+        If current mode is LOGIN, returns SIGNUP and vice versa.
+        """
+        if self == AuthType.LOGIN:
+            return AuthType.REGISTER
+        return AuthType.LOGIN
 
 class Client():
     def __init__(self, ip: str, port: int):
@@ -40,17 +56,24 @@ class Client():
         self.sock.setblocking(True)
         self.request_manager = RequestManager(self.sock)
         self.request_manager.begin()
+        
+        self.user: User | None = None
         self.subscription = Subscription(None, None)
         
         
-    def authenticate(self, username: str, password: str, callback: Callable[[bool], None]):
+    def authenticate(self, subtype: AuthType, username: str, password: str, callback: Callable[[bool, str], None]):
         @ensure_correct_data(default=False, callback=callback)
         def c(req: Request):
-            if req.data["status"] == "success" and req.data["message"] == "Authenticated":
-                callback(True)
-            callback(False)
+            msg = req.data["message"]
+            status = req.data["status"] == "success"
+            if status and msg == "Authenticated" or msg == "Registered":
+                self.user = User.from_json_serializeable(req.data["user"])
+                logger.info(f"logged in with user: {self.user}")
+                callback(True, 'Authenticated')
+            callback(False, msg)
         
-        request = Request(RequestType.AUTHENTICATION, {"username": username, "password": password})
+        
+        request = Request(RequestType.AUTHENTICATION, {"username": username, "password": password, "subtype": subtype.value})
         self.request_manager.request(request, callback=c)
         
     def get_guilds(self, callback: Callable[[list[Guild]], None]):

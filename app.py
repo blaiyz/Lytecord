@@ -9,8 +9,9 @@ import os
 
 from src.client.ui.login_frame import LoginFrame
 from src.client.ui.main_frame import MainFrame
-from src.client.client import Client
+from src.client.client import Client, AuthType
 from src.shared.protocol import HOST
+from src.shared import login_utils
 import src.shared.loguru_config
 
 customtkinter.set_appearance_mode("system")
@@ -60,20 +61,33 @@ class App(customtkinter.CTk):
 
         self.bind("<Button-1>", self.click_event, add="+")
 
-    def authenticate(self, mode: str, username: str, password: str, callback: Callable[[bool, str], None]):
+    def authenticate(self, subtype: AuthType, username: str, password: str, callback: Callable[[bool, str], None]):
         if self.app_state == AppState.LOGGING_IN:
             callback(False, "Already Logging in")
 
-        logger.info(f"Authenticating user: {username} with password: {password} in mode: {mode}")
+        logger.info(f"Authenticating user: {username} with password: {password} in mode: {subtype}")
         
-        def c(success: bool):
+        def c(success: bool, message: str):
             if success:
-                self.app_state = AppState.LOGGING_IN
+                self.app_state = AppState.LOGGED
                 self.after(0, self.switch_frame)
-                callback(True, "Authenticated")
-            callback(False, "Invalid credentials")
+                callback(True, message)
+            callback(False, message)
             
-        self.client.authenticate(username, password, c)
+        if not login_utils.is_valid_username(username):
+            if subtype == AuthType.REGISTER:
+                callback(False, "Invalid username")
+            else:
+                callback(False, "Invalid credentials")
+            return
+        if not login_utils.is_valid_password(password):
+            if subtype == AuthType.REGISTER:
+                callback(False, "Invalid/weak password")
+            else:
+                callback(False, "Invalid credentials")
+            return
+            
+        self.client.authenticate(subtype, username, password, c)
 
     
     def switch_frame(self):
@@ -106,6 +120,7 @@ class App(customtkinter.CTk):
 class AppState(Enum):
     IDLE = 1
     LOGGING_IN = 2
+    LOGGED = 3
 
 
 if __name__ == "__main__":

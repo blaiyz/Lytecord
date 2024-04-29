@@ -7,7 +7,8 @@ import PIL.Image as im
 import PIL.ImageTk as imtk
 import os
 
-from enum import Enum
+from src.client.client import AuthType
+
 
 LOWER_ROW_GRID = 100
 AUTH_BUTTON_ROW = 50
@@ -18,8 +19,8 @@ FG_COLOR = "#4028a1"
 class LoginFrame(ctk.CTkFrame):
     def __init__(self, *args, auth: Callable, **kwargs):
         super().__init__(*args, fg_color = FG_COLOR, corner_radius = 0, **kwargs)
-        self.auth_mode = LoginMode.LOGIN
-        self.auth: Callable = auth
+        self.state = AuthType.LOGIN
+        self.auth: Callable[[AuthType, str, str, Callable[[bool, str], None]], None] = auth
         
         self.grid_columnconfigure((0, 2), weight=2, minsize=0)
         self.grid_columnconfigure(1, weight=1)
@@ -91,12 +92,17 @@ class LoginFrame(ctk.CTkFrame):
                 self.error_label.configure(text= "Success!\n Loggin in...", text_color="green")
             self.error_label.grid()
             
-        self.auth(self.auth_mode, self.username_entry.get(), self.password_entry.get(), callback=callback)
+        if self.state == AuthType.REGISTER:
+            if self.password_entry.get() != self.password_confirm.get():
+                callback(False, "Passwords do not match")
+                return
+            
+        self.auth(self.state, self.username_entry.get(), self.password_entry.get(), callback)
 
         
 
     def switch_authentication_mode(self):
-        if self.auth_mode == LoginMode.LOGIN:
+        if self.state == AuthType.LOGIN:
             self.auth_label.configure(text="Create an account\nPlease sign up to continue.")
             self.switch_auth_mode_label.configure(text = "Already have an account?")
             self.password_confirm.grid()
@@ -105,23 +111,7 @@ class LoginFrame(ctk.CTkFrame):
             self.switch_auth_mode_label.configure(text = "Don't have an account?")
             self.password_confirm.grid_remove()
         
-        self.auth_mode = self.auth_mode.opp()
-        self.auth_button.configure(text=self.auth_mode.value)
-        self.switch_auth_mode_button.configure(text=self.auth_mode.opp().value)
-        #print("Switching to", self.auth_mode.value)
+        self.state = self.state.opp()
+        self.auth_button.configure(text=self.state.value)
+        self.switch_auth_mode_button.configure(text=self.state.opp().value)
         self.error_label.grid_remove()
-
-
-
-class LoginMode(Enum):
-    LOGIN = "Login"
-    SIGNUP = "Signup"
-
-    def opp(self):
-        """
-        Returns the oppsite of the current mode.
-        If current mode is LOGIN, returns SIGNUP and vice versa.
-        """
-        if self == LoginMode.LOGIN:
-            return LoginMode.SIGNUP
-        return LoginMode.LOGIN

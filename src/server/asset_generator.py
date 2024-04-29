@@ -34,9 +34,10 @@ def generate_channel(name: str, channel_type: ChannelType, guild_id: int) -> Cha
     db.channels.insert_one(c.to_db_dict())
     return c
 
-def generate_user(name: str) -> User:
+def generate_user(name: str, password_hash: str) -> User:
     u = User(get_id(), name)
     db.users.insert_one(u.to_db_dict())
+    db.passwords.insert_one({"_id": u.id, "password_hash": password_hash})
     return u
 
 def generate_message(channel_id: int, content: str, attachment_id: int, author: User) -> Message:
