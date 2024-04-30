@@ -1,7 +1,6 @@
 from __future__ import annotations
 import enum
 import json
-import ijson
 import io
 from collections.abc import Callable
 

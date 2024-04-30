@@ -318,10 +318,12 @@ class TextChannel(CTkFrame):
             return
         if self._channel is None:
             return
+        if self._client.user is None:
+            return
         # Temporary message object (need confirmation from server)
         try:
             t = int(datetime.now().timestamp())
-            message = Message(t << TAG_BIT_LENGTH, self._channel.id, self._entry.get(), 1, 1, t)
+            message = Message(t << TAG_BIT_LENGTH, self._channel.id, self._entry.get(), 1, self._client.user, t)
         except ValueError:
             logger.warning("Failed to create message object")
             return
