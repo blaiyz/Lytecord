@@ -5,12 +5,8 @@ from loguru import logger
 
 from src.client.client import Client
 from src.shared.channel import Channel
-from src.shared.message import Message, TAG_BIT_LENGTH
+from src.shared.message import Message, TAG_BYTE_LENGTH
 
-TEST_MESSAGE = """Test message abcdefghijklmnopqrstuvwxyz 123123123123983475094387520862314912
-test test
-test
-sussy"""
 
 THRESHOLD = 30
 

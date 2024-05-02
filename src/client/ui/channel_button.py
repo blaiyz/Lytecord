@@ -24,5 +24,8 @@ class ChannelButton(CTkButton):
     
     def on_click(self):
         logger.debug(f"ChannelButton {self._channel} clicked")
-        self._cb.set_channel(self._channel)
+        if self._cb.set_channel(self._channel):
+            return
+        else:
+            logger.warning("Failed to set channel")
         

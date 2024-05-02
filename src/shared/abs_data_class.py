@@ -6,7 +6,7 @@ from typing import Any, Type, TypeVar
 from collections import ChainMap
 
 T = TypeVar("T", bound="Serializeable")
-
+TAG_LENGTH = 22
 
 
 class Encoder(json.JSONEncoder):

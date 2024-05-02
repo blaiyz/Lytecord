@@ -17,5 +17,11 @@
   <tr>
     <td><a href="https://www.flaticon.com/free-icons/error" title="error icons">Error icons created by Gregor Cresnar - Flaticon</a></td>
   </tr>
+  <tr>
+    <td><a href="https://www.flaticon.com/free-icons/join" title="join icons">Join icons created by Fathema Khanom - Flaticon</a></td>
+  </tr>
+  <tr>
+    <td><a href="https://www.flaticon.com/free-icons/add" title="add icons">Add icons created by Freepik - Flaticon</a></td>
+  </tr>
 </table>
 </details>

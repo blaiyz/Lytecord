@@ -9,13 +9,9 @@ from src.client.client import Client
 from src.client.ui.message_frame import MessageFrame
 from src.client.message_manager import MessageManager, THRESHOLD
 from src.shared.channel import Channel, ChannelType
-from src.shared.message import TAG_BIT_LENGTH, Message, MAX_MESSAGE_LENGTH
+from src.shared.message import TAG_BYTE_LENGTH, Message, MAX_MESSAGE_LENGTH
 from src.client.ui.design import ATTACHMENT_ICON_DARK, ATTACHMENT_ICON_LIGHT
 
-TEST_MESSAGE = """Test message abcdefghijklmnopqrstuvwxyz 123123123123983475094387520862314912
-test test
-test
-sussy"""
 
 ENTRY_COLOR = "#373737"
 HOVER_COLOR = "#727272"
@@ -79,7 +75,7 @@ class TextChannel(CTkFrame):
     def set_channel(self, channel: Channel | None) -> bool:
         logger.debug(f"Setting channel {channel}, cur: {self._channel}")
         if self._channel == channel:
-            return False
+            return channel is None
         
         if self._loading:
             logger.warning("Already loading text channel")
@@ -108,13 +104,16 @@ class TextChannel(CTkFrame):
         self._scroll_lock = False
         
         def callback():
+            self._loading = True
             messages = self._mm.get_messages(id=0, count=LOAD_COUNT)
             self._load_messages(messages, from_top=False, stick=True)
+            self._loading = False
+            
             # def set_loading_false():
             #     self._loading = False
             # self.after(0, set_loading_false)
-            self._loading = False
         self._mm.set_channel(channel, received=callback)
+        self._loading = False
         return True
         
             
@@ -323,7 +322,7 @@ class TextChannel(CTkFrame):
         # Temporary message object (need confirmation from server)
         try:
             t = int(datetime.now().timestamp())
-            message = Message(t << TAG_BIT_LENGTH, self._channel.id, self._entry.get(), 1, self._client.user, t)
+            message = Message(t << TAG_BYTE_LENGTH, self._channel.id, self._entry.get(), 1, self._client.user, t)
         except ValueError:
             logger.warning("Failed to create message object")
             return

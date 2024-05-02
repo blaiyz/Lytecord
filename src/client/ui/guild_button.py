@@ -27,7 +27,7 @@ class GuildButton(CTkButton):
         super().__init__(*args, text="", corner_radius=15, width=SIZE+10, height=SIZE+10, border_spacing=0, command=self.on_click, image=icon, fg_color=COLOR, hover_color=HOVER_COLOR, **kwargs)
         self.client = client
         self._guild = guild
-        self._cf = cf
+        self._channels_frame = cf
         self._fetching = False
 
 
@@ -35,7 +35,7 @@ class GuildButton(CTkButton):
 
     def on_click(self):
         logger.debug(f"GuildButton {self._guild} clicked")
-        if self._cf.load(new_guild = self._guild):
+        if self._channels_frame.load(new_guild = self._guild):
             return
         else:
             logger.warning("Failed to load channels")

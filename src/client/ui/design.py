@@ -24,3 +24,11 @@ IMG_ERR_ICON_DARK = Image.open(os.path.join(DIR, "icons/warning512dark.png"))
 # Placeholder image attachment icon
 IMG_ICON_LIGHT = Image.open(os.path.join(DIR, "icons/image512light.png"))
 IMG_ICON_DARK = Image.open(os.path.join(DIR, "icons/image512dark.png"))
+
+# Join guild button icon
+JOIN_GUILD_ICON_LIGHT = Image.open(os.path.join(DIR, "icons/join_guild512light.png"))
+JOIN_GUILD_ICON_DARK = Image.open(os.path.join(DIR, "icons/join_guild512dark.png"))
+
+# Create guild button icon
+CREATE_GUILD_ICON_LIGHT = Image.open(os.path.join(DIR, "icons/create_guild512light.png"))
+CREATE_GUILD_ICON_DARK = Image.open(os.path.join(DIR, "icons/create_guild512dark.png"))

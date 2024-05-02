@@ -5,12 +5,11 @@ import string
 
 from src.server import db
 from src.shared import Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType
+from src.shared.abs_data_class import TAG_LENGTH
 
 
 lock = Lock()
 tag = 0
-# The number of bits reserved for the tag
-TAG_LENGTH = 22
 
 
 def _get_random_hex_code(length=16):
