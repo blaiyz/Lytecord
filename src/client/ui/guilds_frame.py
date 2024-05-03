@@ -18,7 +18,7 @@ from src.shared.guild import Guild, MAX_NAME_LENGTH, MIN_NAME_LENGTH
 
 WIDTH = 100
 BG_COLOR = "#1c1c2d"
-BUTTON_SIZE = 50
+BUTTON_SIZE = 60
 
 class GuildsFrame(CTkFrame):
     def __init__(self, *args, channels_frame: ChannelsFrame, client: Client, **kwargs):
@@ -38,11 +38,11 @@ class GuildsFrame(CTkFrame):
         
         
         join_icon = CTkImage(light_image=JOIN_GUILD_ICON_LIGHT, dark_image=JOIN_GUILD_ICON_DARK, size=(BUTTON_SIZE, BUTTON_SIZE))
-        self._join_guild_button = CTkButton(self, text='', corner_radius=20, fg_color="transparent", hover_color="#858585", image=join_icon, command=self.on_join_guild, width=BUTTON_SIZE, height=BUTTON_SIZE)
+        self._join_guild_button = CTkButton(self, text='', corner_radius=10, fg_color="transparent", hover_color="#858585", image=join_icon, command=self.on_join_guild, width=BUTTON_SIZE, height=BUTTON_SIZE)
         self._join_guild_button.grid(row=2, column=0, padx=10, pady=5)
         
         create_icon = CTkImage(light_image=CREATE_GUILD_ICON_LIGHT, dark_image=CREATE_GUILD_ICON_DARK, size=(BUTTON_SIZE, BUTTON_SIZE))
-        self._create_guild_button = CTkButton(self, text='', corner_radius=20, fg_color="transparent", hover_color="#858585", image=create_icon, command=self.on_create_guild, width=BUTTON_SIZE, height=BUTTON_SIZE)
+        self._create_guild_button = CTkButton(self, text='', corner_radius=10, fg_color="transparent", hover_color="#858585", image=create_icon, command=self.on_create_guild, width=BUTTON_SIZE, height=BUTTON_SIZE)
         self._create_guild_button.grid(row=3, column=0, padx=10, pady=(5, 15))
 
     def add_guild(self, guild: Guild):

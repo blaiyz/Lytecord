@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkTextbox
 import tkinter as tk
-from datetime import datetime
+from datetime import datetime, timedelta
 from loguru import logger
 
 from src.client.client import Client
@@ -9,6 +9,19 @@ from src.shared.message import Message
 
 FONT_SIZE = 14
 
+
+def pretty_relative_date(d: datetime) -> str:
+    today = datetime.now().date()
+    date = d.date()
+
+    if date == today:
+        return 'today'
+    elif date == today - timedelta(days=1):
+        return 'yesterday'
+    elif date > today - timedelta(days=7):
+        return f'{(today - date).days} days ago'
+    else:
+        return d.strftime('%d/%m/%Y')
 
 class MessageFrame(CTkFrame):
     FONT = None
@@ -23,7 +36,8 @@ class MessageFrame(CTkFrame):
         self._author_label = CTkLabel(self, text=self._author_name, font=CTkFont(size=FONT_SIZE+2, weight="bold"))
         self._author_label.grid(row=0, column=0, sticky="w", padx=10, pady=1)
 
-        self._time_label = CTkLabel(self, text=datetime.fromtimestamp(self.message.timestamp).strftime("%H:%M"), font=CTkFont(size=FONT_SIZE-2))
+        time = datetime.fromtimestamp(self.message.timestamp)
+        self._time_label = CTkLabel(self, text=time.strftime("%H:%M,  ") + pretty_relative_date(time), font=CTkFont(size=FONT_SIZE-2), text_color="#888888")
         self._time_label.grid(row=0, column=1, sticky="w", padx=10, pady=1)
 
         # Use label for now, change to textbox later if possible
