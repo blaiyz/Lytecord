@@ -1,6 +1,9 @@
 from turtle import window_height
 import customtkinter as ctk
 from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame, CTkImage, CTkInputDialog
+from CTkMessagebox import CTkMessagebox
+from ctkcomponents import CTkBanner
+
 
 from PIL import Image
 from loguru import logger
@@ -10,7 +13,7 @@ from src.client.client import Client
 from src.client.ui.channels_frame import ChannelsFrame
 from src.client.ui.guild_button import GuildButton, SIZE
 from src.client.ui.design import JOIN_GUILD_ICON_DARK, JOIN_GUILD_ICON_LIGHT, CREATE_GUILD_ICON_DARK, CREATE_GUILD_ICON_LIGHT
-from src.shared.guild import Guild
+from src.shared.guild import Guild, MAX_NAME_LENGTH, MIN_NAME_LENGTH
 
 
 WIDTH = 100
@@ -70,19 +73,90 @@ class GuildsFrame(CTkFrame):
         self.guilds.clear()
         return True
     
+    def center_top_level(self, top_level: ctk.CTkToplevel):
+        root = self.winfo_toplevel()
+        x = int(root.winfo_width() * .5 + self.winfo_rootx() - .5 * top_level.winfo_width())
+        y = int(root.winfo_height() * .5 + self.winfo_rooty() - .5 * top_level.winfo_height())
+        top_level.geometry(f"+{x}+{y}")    
+    
     def on_join_guild(self):
-        pass
+        dialog = CTkInputDialog(title="Join Guild", text="Enter the invite code of the guild")
+        self.center_top_level(dialog)
         
-    def on_create_guild(self):
-        dialog = CTkInputDialog(title="Create Guild", text="Enter the name of the guild")
+        code = dialog.get_input()
+        logger.debug(f"Joining guild with code {code}")
         
-        x = self.winfo_x() + self.winfo_width()//2 - dialog.winfo_width()//2
-        y = self.winfo_y() + self.winfo_height()//2 - dialog.winfo_height()//2
-        dialog.geometry(f"+{x}+{y}")
+        if code is None:
+            return
+        
+        if len(code) > 16:
+            box = CTkMessagebox(title="Join Guild", message="Invalid code", icon="cancel", option_1="Ok")
+            self.center_top_level(box)
+            return
+        
+        def callback(guild: Guild | None, message: str):
+            if guild is not None:
+                self.add_guild(guild)
+                box = CTkMessagebox(title="Join Guild", message=f"Successfully joined guild with name \"{guild.name}\"", icon="check", option_1="Ok")
+                self.center_top_level(box)
+                return
+            
+            box = CTkMessagebox(title="Join Guild", message="Could not join the guild: " + message, icon="cancel", option_1="Ok", option_2="Retry")
+            self.center_top_level(box)
+            
+            response = box.get()
+            if response == "Retry":
+                self.after_idle(self.on_join_guild)
+                
+        self.client.join_guild(code, callback=callback)
+        
+    def on_create_guild(self):       
+        dialog = CTkInputDialog(title="Create Guild", text="Enter the name of the new guild")
+        self.center_top_level(dialog)
 
         name = dialog.get_input()
         logger.debug(f"Creating guild with name {name}")
         
+        if name is None:
+            return
+
+        message = None
+        if len(name) > MAX_NAME_LENGTH:
+            message = f"Name cannot be more than {MAX_NAME_LENGTH} characters long"
+        elif len(name) < MIN_NAME_LENGTH:
+            message = f"Name cannot be less than {MIN_NAME_LENGTH} characters long"
+        else:
+            try:
+                guild = Guild(0, name, 0)
+            except:
+                message = "Invalid name"
+        
+        if message:
+            box = CTkMessagebox(title="Create Guild", message=message, icon="cancel", option_1="Ok", option_2="Retry")
+            self.center_top_level(box)
+            
+            response = box.get()
+            if response == "Retry":
+                self.after_idle(self.on_create_guild)
+            return
+        
+        
+        def callback(guild: Guild | None, message: str):
+            if guild is not None:
+                self.add_guild(guild)
+                box = CTkMessagebox(title="Create Guild", message=f"Successfully created guild with name \"{guild.name}\"", icon="check", option_1="Ok")
+                self.center_top_level(box)
+                return
+            
+            box = CTkMessagebox(title="Create Guild", message="Error at creating guild: " + message, icon="cancel", option_1="Ok", option_2="Retry")
+            self.center_top_level(box)
+            
+            response = box.get()
+            if response == "Retry":
+                self.after_idle(self.on_create_guild)
+        
+        self.client.create_guild(guild.name, callback=callback)
+
     def load(self):
         if self._loading:
             logger.warning("Already loading guilds")

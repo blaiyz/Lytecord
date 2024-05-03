@@ -1,7 +1,6 @@
 from threading import Lock
 from datetime import datetime as dt
-import random
-import string
+
 
 from src.server import db
 from src.shared import Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType
@@ -12,8 +11,6 @@ lock = Lock()
 tag = 0
 
 
-def _get_random_hex_code(length=16):
-    return ''.join(random.choices(string.hexdigits, k=length))
 
 def get_id() -> int:
     global tag
@@ -26,9 +23,9 @@ def generate_guild(name: str, owner_id: int) -> Guild:
     if db.users.find_one({"_id": owner_id}) is None:
         raise ValueError(f"User with id {owner_id} does not exist")
     
-    join_code = _get_random_hex_code()
+    join_code = db.get_random_hex_code()
     while db.guilds.find_one({"join_code": join_code}) is not None:
-        join_code = _get_random_hex_code()
+        join_code = db.get_random_hex_code()
     
     g = Guild(get_id(), name, owner_id)
     d = g.to_db_dict()

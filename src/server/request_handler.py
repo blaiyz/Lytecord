@@ -19,7 +19,7 @@ def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Reque
     req_type = req.request_type
     
     match req_type:
-        case RequestType.AUTHENTICATION if not subbed:
+        case RequestType.AUTHENTICATE if not subbed:
             res_data = authenticate(req.data, client)
         case RequestType.GET_GUILDS if not subbed:
             res_data = get_guilds(req.data, client)
@@ -33,6 +33,16 @@ def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Reque
             res_data = channel_unsub_handler(req.data, client)
         case RequestType.SEND_MESSAGE if not subbed:
             res_data = handle_new_message(req.data, client)
+        case RequestType.CREATE_GUILD if not subbed:
+            res_data = handle_create_guild(req.data, client)
+        case RequestType.CREATE_CHANNEL if not subbed:
+            res_data = handle_create_channel(req.data, client)
+        case RequestType.GET_JOIN_CODE if not subbed:
+            res_data = handle_get_join_code(req.data, client)
+        case RequestType.REFRESH_JOIN_CODE if not subbed:
+            res_data = handle_refresh_join_code(req.data, client)
+        case RequestType.JOIN_GUILD if not subbed:
+            res_data = handle_join_guild(req.data, client)
         case _:
             res_data = {"status": "error", "message": "Invalid request type"}
             
@@ -187,3 +197,84 @@ def handle_new_message(data: dict, client: Client) -> dict:
     if client.current_channel.send_message(message):
         return {"status": "success", "message": message}
     return {"status": "error", "message": "Failed to send message"}
+
+
+@ensure_correct_data
+def handle_create_guild(data: dict, client: Client) -> dict:
+    if client.user is None:
+        return {"status": "error", "message": "Not logged in"}
+    
+    name = data["name"]
+    
+    try:
+        guild = asset_generator.generate_guild(name, client.user.id)
+    except ValueError as e:
+        return {"status": "error", "message": "Could not create guild"}
+    
+    return {"status": "success", "guild": guild}
+
+@ensure_correct_data
+def handle_create_channel(data: dict, client: Client) -> dict:
+    if client.user is None:
+        return {"status": "error", "message": "Not logged in"}
+    
+    name = data["name"]
+    guild_id = data["guild_id"]
+    
+    if not db.does_guild_exist(guild_id):
+        return {"status": "error", "message": "Invalid guild id"}
+    
+    if not client.user.id == db.get_guild_owner(guild_id):
+        return {"status": "error", "message": "You are not the owner of this guild"}
+    
+    try:
+        channel = asset_generator.generate_channel(name, ChannelType.TEXT, guild_id)
+    except ValueError as e:
+        return {"status": "error", "message": "Could not create channel"}
+    
+    return {"status": "success", "channel": channel}
+
+@ensure_correct_data
+def handle_get_join_code(data: dict, client: Client) -> dict:
+    if client.user is None:
+        return {"status": "error", "message": "Not logged in"}
+    
+    guild_id = data["guild_id"]
+    if not db.does_guild_exist(guild_id):
+        return {"status": "error", "message": "Invalid guild id"}
+    
+    if not client.user.id == db.get_guild_owner(guild_id):
+        return {"status": "error", "message": "You are not the owner of this guild"}
+    
+    return {"status": "success", "code": db.get_guild_join_code(guild_id)}
+
+@ensure_correct_data
+def handle_refresh_join_code(data: dict, client: Client) -> dict:
+    if client.user is None:
+        return {"status": "error", "message": "Not logged in"}
+    
+    guild_id = data["guild_id"]
+    if not db.does_guild_exist(guild_id):
+        return {"status": "error", "message": "Invalid guild id"}
+    
+    if not client.user.id == db.get_guild_owner(guild_id):
+        return {"status": "error", "message": "You are not the owner of this guild"}
+    
+    return {"status": "success", "code": db.refresh_guild_join_code(guild_id)}
+
+@ensure_correct_data
+def handle_join_guild(data: dict, client: Client) -> dict:
+    if client.user is None:
+        return {"status": "error", "message": "Not logged in"}
+    
+    code = data["code"]
+    guild = db.get_guild_by_code(code)
+    
+    if guild is None:
+        return {"status": "error", "message": "Invalid code"}
+    
+    if db.is_user_in_guild(client.user.id, guild.id):
+        return {"status": "error", "message": f"Already in requested guild ({guild.name})"}
+    
+    db.user_join_guild(client.user.id, guild.id)
+    return {"status": "success", "message": "Joined guild", "guild": guild}

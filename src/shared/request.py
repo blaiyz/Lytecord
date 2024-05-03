@@ -8,16 +8,21 @@ from src.shared.abs_data_class import AbsDataClass, Encoder, Serializeable
 import src.shared.request as request
 
 class RequestType(enum.Enum):
-    AUTHENTICATION = "Authenticate"
+    AUTHENTICATE = "Authenticate"
     REGISTER  = "Register"
     UNAUTHORIZED = "Unauthorized"
     ERROR = "Error"
-    GET_MESSAGES = "GetMessages"
     SEND_MESSAGE = "SendMessage"
     CHANNEL_SUBSCRIPTION = "ChannelSubscription"
     GET_GUILDS = "GetGuilds"
     GET_CHANNELS = "GetChannels"
+    GET_MESSAGES = "GetMessages"
     GET_ASSET = "GetAsset"
+    CREATE_GUILD = "CreateGuild"
+    CREATE_CHANNEL = "CreateChannel"
+    GET_JOIN_CODE = "GetJoinCode"
+    REFRESH_JOIN_CODE = "RefreshJoinCode"
+    JOIN_GUILD = "JoinGuild"
     
 
 class Request():

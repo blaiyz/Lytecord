@@ -3,8 +3,6 @@ from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont
 import tkinter as tk
 
 from collections.abc import Callable
-import PIL.Image as im 
-import PIL.ImageTk as imtk
 import os
 
 from src.client.client import AuthType

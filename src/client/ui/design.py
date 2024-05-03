@@ -32,3 +32,7 @@ JOIN_GUILD_ICON_DARK = Image.open(os.path.join(DIR, "icons/join_guild512dark.png
 # Create guild button icon
 CREATE_GUILD_ICON_LIGHT = Image.open(os.path.join(DIR, "icons/create_guild512light.png"))
 CREATE_GUILD_ICON_DARK = Image.open(os.path.join(DIR, "icons/create_guild512dark.png"))
+
+# Refresh code
+REFRESH_ICON_LIGHT = Image.open(os.path.join(DIR, "icons/refresh128light.png"))
+REFRESH_ICON_DARK = Image.open(os.path.join(DIR, "icons/refresh128dark.png"))

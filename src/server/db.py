@@ -1,6 +1,8 @@
 from loguru import logger
 from pymongo import MongoClient
 from pymongo.collection import Collection
+import random
+import string
 
 from src.shared import AbsDataClass, Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType
 
@@ -14,6 +16,9 @@ messages: Collection = db["messages"]
 attachments: Collection = db["attachments"]
 passwords: Collection = db["passwords"]
 
+
+def get_random_hex_code(length=16):
+    return ''.join(random.choices(string.hexdigits, k=length))
 
 def get_user_guilds(user_id: int) -> list[Guild]:
     cursor = users.find_one({"_id": user_id})
@@ -37,6 +42,24 @@ def get_guild(guild_id: int) -> Guild:
 
 def get_guild_join_code(guild_id: int) -> str:
     return _get_guild_raw(guild_id)["join_code"]
+
+def refresh_guild_join_code(guild_id: int) -> str:
+    join_code = get_random_hex_code()
+    
+    while guilds.find_one({"join_code": join_code}) is not None:
+        join_code = get_random_hex_code()
+        
+    guilds.update_one({"_id": guild_id}, {"$set": {"join_code": join_code}})
+    return join_code
+
+def get_guild_by_code(code: str) -> Guild | None:
+    guild = guilds.find_one({"join_code": code})
+    if guild is None:
+        return None
+    return Guild.from_db_dict(guild)
+    
+def get_guild_owner(guild_id: int) -> int:
+    return _get_guild_raw(guild_id)["owner_id"]
 
 
 def get_channels(guild_id: int)-> list[Channel]:

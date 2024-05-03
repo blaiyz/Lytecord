@@ -77,7 +77,7 @@ class Client():
             callback(False, msg)
         
         
-        request = Request(RequestType.AUTHENTICATION, {"username": username, "password": password, "subtype": subtype.value})
+        request = Request(RequestType.AUTHENTICATE, {"username": username, "password": password, "subtype": subtype.value})
         self.request_manager.request(request, callback=c)
         
     def get_guilds(self, callback: Callable[[list[Guild]], None]):
@@ -167,6 +167,69 @@ class Client():
         
         request = Request(RequestType.SEND_MESSAGE, {"message": message})
         self.request_manager.request(request, callback=c)
+        
+    def create_guild(self, name: str, callback: Callable[[Guild | None, str], None]):
+        @ensure_correct_data(default=None, callback=callback)
+        def c(req: Request):
+            if req.data["status"] == "success":
+                guild = Guild.from_json_serializeable(req.data["guild"])
+                callback(guild, '')
+            else:
+                message: str = req.data["message"]
+                callback(None, message)
+        
+        request = Request(RequestType.CREATE_GUILD, {"name": name})
+        self.request_manager.request(request, callback=c)
+        
+    def create_channel(self, name: str, guild_id: int, callback: Callable[[Channel | None, str], None]):   
+        @ensure_correct_data(default=None, callback=callback)
+        def c(req: Request):
+            if req.data["status"] == "success":
+                channel = Channel.from_json_serializeable(req.data["channel"])
+                callback(channel, '')
+            else:
+                message: str = req.data["message"]
+                callback(None, message)
+        
+        request = Request(RequestType.CREATE_CHANNEL, {"name": name, "guild_id": guild_id, "type": ChannelType.TEXT})
+        self.request_manager.request(request, callback=c)
+    
+    def get_guild_join_code(self, guild_id: int, callback: Callable[[str | None], None]):
+        @ensure_correct_data(default=None, callback=callback)
+        def c(req: Request):
+            if req.data["status"] == "success":
+                callback(req.data["code"])
+            else:
+                callback(None)
+        
+        request = Request(RequestType.GET_JOIN_CODE, {"guild_id": guild_id})
+        self.request_manager.request(request, callback=c)
+        
+    def refresh_guild_join_code(self, guild_id: int, callback: Callable[[str | None], None]):
+        @ensure_correct_data(default=None, callback=callback)
+        def c(req: Request):
+            if req.data["status"] == "success":
+                callback(req.data["code"])
+            else:
+                callback(None)
+        
+        request = Request(RequestType.REFRESH_JOIN_CODE, {"guild_id": guild_id})
+        self.request_manager.request(request, callback=c)
+    
+            
+    def join_guild(self, code: str, callback: Callable[[Guild | None, str], None]):
+        @ensure_correct_data(default=None, callback=callback)
+        def c(req: Request):
+            if req.data["status"] == "success":
+                guild = Guild.from_json_serializeable(req.data["guild"])
+                callback(guild, '')
+            else:
+                message: str = req.data["message"]
+                callback(None, message)
+        
+        request = Request(RequestType.JOIN_GUILD, {"code": code})
+        self.request_manager.request(request, callback=c)
+        
     
     def close(self):
         logger.debug("Closing client")

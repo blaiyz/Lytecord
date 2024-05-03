@@ -13,7 +13,7 @@ from src.shared.message import TAG_BYTE_LENGTH, Message, MAX_MESSAGE_LENGTH
 from src.client.ui.design import ATTACHMENT_ICON_DARK, ATTACHMENT_ICON_LIGHT
 
 
-ENTRY_COLOR = "#373737"
+ENTRY_COLOR = "#303030"
 HOVER_COLOR = "#727272"
 
 COLOR = ("#ebebeb", "#252525")
@@ -54,6 +54,9 @@ class TextChannel(CTkFrame):
         self._messages_frame.grid_columnconfigure(0, weight=1)
         self._messages_frame.grid_rowconfigure(0, weight=1)
         self._messages_frame.bind_all("<MouseWheel>", self._scroll_callback, add=True)
+        # This is to always have at least one widget in the frame (to prevent scroll view issues)
+        self._fix_frame = CTkFrame(self._messages_frame, fg_color="transparent", width=1, height=1)
+        self._fix_frame.grid(row=0, column=0)
 
 
         # Message entry and the attachment button
@@ -152,7 +155,6 @@ class TextChannel(CTkFrame):
         if stick:
             self.update_idletasks()
             self._messages_frame._parent_canvas.yview_moveto(1.0)
-        #message_frame.bind("<Map>", lambda e: self._frame_mapped_callback(e, message_frame, relative_pos))
 
         
 
@@ -217,7 +219,8 @@ class TextChannel(CTkFrame):
         count = len(new_message_frames)
         was_empty = total == count
         
-        
+        if was_empty:
+            self._messages_frame._parent_canvas.yview_moveto(0)
         #logger.debug(f"regridding: {from_top}, {self._top_row}, {self._bottom_row}, count: {count}, total: {total}")
         #logger.debug("\n".join([f"{frame.message.content}:{frame}" for frame in self._message_list]))
         
@@ -282,6 +285,9 @@ class TextChannel(CTkFrame):
                     message_frame.grid(row=temp_top_row, **MESSAGE_GRID_KWARGS)
                     temp_top_row += 1
                     
+                if stick is not None:
+                    self._messages_frame._parent_canvas.yview_moveto(0)
+                    
 
         
         if stick is not None:
@@ -292,8 +298,12 @@ class TextChannel(CTkFrame):
         return
             
     def _scroll_callback(self, event: tk.Event):
-        if self._scroll_lock or self._channel is None or self._loading:
+        if self._channel is None:
+            return
+        if self._scroll_lock or self._loading:
             logger.debug(f"scroll: {self._scroll_lock}, channel: {self._channel}, loading: {self._loading}")
+            return
+        if len(self._message_list) == 0:
             return
         
         yview = self._messages_frame._parent_canvas.yview()
