@@ -1,9 +1,9 @@
 from threading import Lock
 from datetime import datetime as dt
-
+from PIL import Image
 
 from src.server import db
-from src.shared import Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType
+from src.shared import Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType, attachment
 from src.shared.abs_data_class import TAG_LENGTH
 
 
@@ -51,7 +51,7 @@ def generate_user(name: str, password_hash: str) -> User:
     db.passwords.insert_one({"_id": u.id, "password_hash": password_hash})
     return u
 
-def generate_message(channel_id: int, content: str, attachment_id: int, author: User) -> Message:
+def generate_message(channel_id: int, content: str, author: User, attachment: Attachment | None) -> Message:
     if db.channels.find_one({"_id": channel_id}) is None:
         raise ValueError(f"Channel with id {channel_id} does not exist")
     if db.users.find_one({"_id": author.id}) is None:
@@ -59,6 +59,37 @@ def generate_message(channel_id: int, content: str, attachment_id: int, author: 
     # TODO: Check if attachment exists
     
     id = get_id()
-    m = Message(id, channel_id, content, attachment_id, author, id >> TAG_LENGTH)
-    db.messages.insert_one(m.to_db_dict())
+    m = Message(id, channel_id, content, attachment, author, id >> TAG_LENGTH)
+    # Convert the author object to author_id to store in the database
+    d = m.to_db_dict()
+    del d["author"]
+    d["author_id"] = author.id
+    
+    # Same for attachment
+    del d["attachment"]
+    if attachment is not None:
+        d["attachment_id"] = attachment.id
+    else:
+        d["attachment_id"] = None
+    
+    db.messages.insert_one(d)
     return m
+
+def generate_attachment(data: bytes, attachment_type: AttachmentType, name: str) -> Attachment:
+    if len(data) > attachment.MAX_SIZE:
+        raise ValueError(f"Attachment data is too large ({len(data)} > {attachment.MAX_SIZE})")
+    
+    width, height = 0, 0
+    if attachment_type == AttachmentType.IMAGE:
+        width, height = Image.open(data).size
+        
+    if width > attachment.MAX_WIDTH:
+        raise ValueError(f"Width is too large ({width} > {attachment.MAX_WIDTH})")
+    elif height > attachment.MAX_HEIGHT:
+        raise ValueError(f"Height is too large ({height} > {attachment.MAX_HEIGHT})")
+        
+    id = get_id()
+    a = Attachment(id, name, attachment_type, width, height, len(data))
+    db.attachments.put(data, _id=id, filename=name, attachment_type=attachment_type.value, width=width, height=height)
+    
+    return a

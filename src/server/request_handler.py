@@ -192,7 +192,7 @@ def handle_new_message(data: dict, client: Client) -> dict:
     channel = client.current_channel.channel
     content = data["message"]["content"]
     
-    message = asset_generator.generate_message(channel.id, content, 0, client.user)
+    message = asset_generator.generate_message(channel.id, content, client.user, None)
     
     if client.current_channel.send_message(message):
         return {"status": "success", "message": message}

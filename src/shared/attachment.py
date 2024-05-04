@@ -13,8 +13,8 @@ MAX_HEIGHT = 2**12
 
 
 class AttachmentType(Serializeable, Enum):
-    IMAGE = 0
-    OTHER = 1
+    IMAGE = "image"
+    OTHER = "other"
 
     def __str__(self):
         return self.name.lower()
@@ -33,8 +33,7 @@ class Attachment(AbsDataClass):
     type: AttachmentType
     width: int
     height: int
-    # Base64 encoded
-    blob: str
+    size: int
 
     def __post_init__(self):
         super().__post_init__()
@@ -42,12 +41,11 @@ class Attachment(AbsDataClass):
             logger.error(f"Name ({self.filename}) cannot be more than 30 characters long or less than 3 characters long")
             raise ValueError("Name cannot be more than 30 characters long or less than 3 characters long")
         
-        size = Attachment.calculate_size(self.blob)
-        if size <= 0:
-            logger.error(f"Attachment size ({size}) cannot be less than or equal to 0")
+        if self.size <= 0:
+            logger.error(f"Attachment size ({self.size}) cannot be less than or equal to 0")
             raise ValueError("Attachment size cannot be less than or equal to 0")
-        if size > MAX_SIZE:
-            logger.error(f"Attachment size ({size}) cannot be more than {MAX_SIZE}")
+        if self.size > MAX_SIZE:
+            logger.error(f"Attachment size ({self.size}) cannot be more than {MAX_SIZE}")
             raise ValueError(f"Attachment size cannot be more than {MAX_SIZE}")
         
         if AttachmentType == AttachmentType.IMAGE:
@@ -75,18 +73,3 @@ class Attachment(AbsDataClass):
         if with_blob:
             return super().__str__()
         return f"Attachment(id: {self.id}, name: {self.filename}, type: {self.type}, {self.width}, {self.height})"
-    
-    def get_image(self):
-        if self.type != AttachmentType.IMAGE:
-            return None
-        return Image.open(BytesIO(base64.b64decode(self.blob, validate=True)))
-    
-    @staticmethod
-    def calculate_size(blob: str) -> int:
-        return int((len(blob) * 3) / 4 - blob.count('=', -2))
-    
-    @staticmethod
-    def from_image(image: Image.Image, filename: str) -> "Attachment":
-        blob = base64.b64encode(image.tobytes()).decode()
-        width, height = image.size
-        return Attachment(0, filename, AttachmentType.IMAGE, width, height, blob)

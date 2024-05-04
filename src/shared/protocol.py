@@ -43,5 +43,8 @@ def receive(socket: socket.socket) -> tuple[Request, int, bool]:
 def _recvall(socket: socket.socket, length: int) -> bytes:
     data = b""
     while len(data) < length:
-        data += socket.recv(length - len(data))
+        batch = socket.recv(length - len(data))
+        if not batch:
+            raise SocketClosedException(f"Socket was closed: {socket}")
+        data += batch
     return data

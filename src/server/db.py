@@ -1,5 +1,6 @@
 from loguru import logger
 from pymongo import MongoClient
+import gridfs
 from pymongo.collection import Collection
 import random
 import string
@@ -13,8 +14,13 @@ guilds: Collection = db["guilds"]
 channels: Collection = db["channels"]
 users: Collection = db["users"]
 messages: Collection = db["messages"]
-attachments: Collection = db["attachments"]
 passwords: Collection = db["passwords"]
+attachments = gridfs.GridFS(db, "attachments")
+
+def convert_id_name(d: dict) -> dict:
+    d["id"] = d["_id"]
+    del d["_id"]
+    return d
 
 
 def get_random_hex_code(length=16):
@@ -124,14 +130,45 @@ def get_password_hash(user_id: int) -> str:
     return result["password_hash"]
 
 
+def _map_db_message(m: dict):
+    """
+    Converts a message from the database to a Message object
+    by replacing the author_id with the author object
+    """
+    author = convert_id_name(_get_user_raw(m["author_id"]))
+    m["author"] = author
+    del m["author_id"]
+    return Message.from_db_dict(m)
 
 def get_messages(channel_id: int, from_id: int, count: int) -> list[Message]:
     """
     Returns messages from the given channel before the given id
     """
     if from_id != 0:
-        return [Message.from_db_dict(m) for m in messages.find({"channel_id": channel_id, "_id": {"$lt": from_id}}).limit(count).sort("_id", -1)]
-    return [Message.from_db_dict(m) for m in messages.find({"channel_id": channel_id}).limit(count).sort("_id", -1)]
+        return [_map_db_message(m) for m in messages.find({"channel_id": channel_id, "_id": {"$lt": from_id}}).limit(count).sort("_id", -1)]
+    return [_map_db_message(m) for m in messages.find({"channel_id": channel_id}).limit(count).sort("_id", -1)]
 
 
+def get_attachment_file(attachment_id: int) -> bytes:
+    if not attachments.exists(attachment_id):
+        raise KeyError(f"Attachment with id {attachment_id} does not exist")
+    
+    return attachments.get(attachment_id).read()
 
+def _get_attachment_raw(attachment_id: int) -> gridfs.GridOut:
+    if not attachments.exists(attachment_id):
+        raise KeyError(f"Attachment with id {attachment_id} does not exist")
+    
+    return attachments.get(attachment_id)
+
+def does_attachment_exist(attachment_id: int) -> bool:
+    return attachments.exists(attachment_id)
+
+def get_attachment(attachment_id: int) -> Attachment:
+    attachment = _get_attachment_raw(attachment_id)
+    filename = attachment.filename
+    attachment_type: str = attachment.attachment_type
+    width: int = attachment.width
+    height: int = attachment.height
+    size = attachment.length
+    return Attachment(attachment_id, filename, AttachmentType(attachment_type), width, height, size)

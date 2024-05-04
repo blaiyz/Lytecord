@@ -16,6 +16,10 @@ def main():
     bindsocket = socket.socket()
     bindsocket.bind(HOST)
     bindsocket.listen(5)
+    
+    from src.server import db
+    
+    logger.info("Server started")
         
     while True:
         sock, addr = bindsocket.accept()

@@ -12,7 +12,7 @@ HEIGHT = 40
 
 class ChannelButton(CTkButton):
     def __init__(self, *args, channel: Channel, channel_box: ChannelBox, client: Client, **kwargs):
-        super().__init__(*args, border_width=3, text="  #"+channel.name, command=self.on_click, font=("", 17), corner_radius=5, height=HEIGHT, anchor="w", **kwargs)
+        super().__init__(*args, border_width=3, text="  #"+channel.name, command=self.on_click, font=("", 17), corner_radius=5, height=HEIGHT, anchor="w", border_color="#00478e", **kwargs)
 
         self._client = client
         self._channel = channel
