@@ -31,11 +31,17 @@ def send(wrapped: RequestWrapper, socket: socket.socket):
     socket.sendall(length + encoded)
 
 def receive(socket: socket.socket) -> tuple[Request, int, bool]:
-    length = int.from_bytes(socket.recv(NUMBER_OF_LENGTH_BYTES), "big")
+    length = int.from_bytes(_recvall(socket, NUMBER_OF_LENGTH_BYTES), "big")
     if length == 0:
         raise SocketClosedException(f"Socket was closed: {socket}")
-    data = socket.recv(length).decode()
-    logger.info(f"Received {length} bytes<<<<<<({socket.getpeername()})\n{data if len(data) < MAX_DATA_LOG_LENGTH else data[:MAX_DATA_LOG_LENGTH] + '...[TRUNCATED]'}")
+    data = _recvall(socket, length).decode()
+    logger.info(f"<<<<<<Received {length} bytes ({socket.getpeername()})\n{data if len(data) < MAX_DATA_LOG_LENGTH else data[:MAX_DATA_LOG_LENGTH] + '...[TRUNCATED]'}")
     id, subbed, req = data.split("\n", maxsplit=2)
     subbed = subbed == "True"
     return Request.deserialize(req), int(id), subbed
+
+def _recvall(socket: socket.socket, length: int) -> bytes:
+    data = b""
+    while len(data) < length:
+        data += socket.recv(length - len(data))
+    return data
