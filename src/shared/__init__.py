@@ -4,4 +4,5 @@ from src.shared.request import Request, RequestType
 from src.shared.user import User
 from src.shared.message import Message
 from src.shared.guild import Guild
+from src.shared.attachment import MAX_SIZE as MAX_ATTACHMENT_SIZE
 from src.shared.attachment import Attachment, AttachmentType

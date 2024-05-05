@@ -1,12 +1,14 @@
 import json
+from types import NoneType, UnionType
 from loguru import logger
 from dataclasses import dataclass
 from abc import ABC
-from typing import Any, Type, TypeVar
+import typing
+from typing import Any, Optional, Type, TypeVar, Union
 from collections import ChainMap
 
 T = TypeVar("T", bound="Serializeable")
-TAG_LENGTH = 22
+TAG_LENGTH = 16
 
 
 class Encoder(json.JSONEncoder):
@@ -18,9 +20,17 @@ class Encoder(json.JSONEncoder):
 
 # Some type shenanigans, see from_json_serializeable method    
 def all_annotations(cls) -> ChainMap:
-    """Returns a dictionary-like ChainMap that includes annotations for all 
-    attributes defined in cls or inherited from superclasses."""
-    return ChainMap(*(c.__annotations__ for c in cls.__mro__ if '__annotations__' in c.__dict__) )    
+    """
+    Returns a dictionary-like ChainMap that includes annotations for all 
+    attributes defined in cls or inherited from superclasses
+    """
+    return ChainMap(*(c.__annotations__ for c in cls.__mro__ if '__annotations__' in c.__dict__) )
+
+def is_optional(field_type):
+    """
+    Checks if a field type is Optional[...] or Union[..., None]
+    """
+    return (typing.get_origin(field_type) is UnionType) and (NoneType in typing.get_args(field_type))
 
 class Serializeable:
     def to_json_serializeable(self):
@@ -43,18 +53,28 @@ class Serializeable:
                 if field not in field_names:
                     continue
                 field_type = field_types[field]
+                if is_optional(field_type):
+                    field_type = typing.get_args(field_type)[0]
+                    
                 #logger.debug(f"Field: {field}, Value: {value}, Type: {field_type}")
-                if issubclass(field_type, Serializeable):
+                if value is None:
+                    converted_data[field] = None
+                elif isinstance(value, Serializeable):
+                    # Value is already converted, keep it as is
+                    converted_data[field] = value
+                elif issubclass(field_type, Serializeable):
                     if isinstance(value, dict):
+                        # Recursively convert the data
                         converted_data[field] = field_type.from_json_serializeable(value)
                     else:
+                        # Reached a primitive type, cannot convert
                         converted_data[field] = field_type(value)
                 else:
                     converted_data[field] = field_type(value)
             # Create a new instance of the class with the converted data
             return cls(**converted_data)
         except (KeyError, TypeError) as e:
-            logger.debug(f"Cannot convert from data: {e} at class {cls}")
+            logger.exception(f"Cannot convert from data: {e} at class {cls}")
             raise ValueError(f"Data cannot be converted to {cls.__name__}")
     
     @staticmethod

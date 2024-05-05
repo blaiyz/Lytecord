@@ -7,7 +7,9 @@ from typing import Callable
 from loguru import logger
 from functools import wraps
 from enum import Enum
+import base64
 
+from src.shared.attachment import Attachment
 from src.shared.protocol import HOST
 from src.shared import Request, RequestType, Channel, ChannelType, Guild, Message, login_utils
 from src.client.request_manager import RequestManager
@@ -15,15 +17,15 @@ from src.shared.user import User
 
 
 
-def ensure_correct_data(default, callback: Callable):
+def ensure_correct_data(default: tuple, callback: Callable):
     def outer(func: Callable[[Request], None]):
         @wraps(func)
         def inner(req: Request):
             try:
                 func(req)
-            except (TypeError, ValueError, KeyError):
-                logger.debug(f"Invalid data: {req.data} from func: {func.__name__}")
-                callback(default)
+            except (TypeError, ValueError, KeyError) as e:
+                logger.exception(f"Exception: {e} Invalid data: {req.data} from func: {callback.__name__}")
+                callback(*default)
         return inner
     return outer
 
@@ -66,7 +68,7 @@ class Client():
         
         
     def authenticate(self, subtype: AuthType, username: str, password: str, callback: Callable[[bool, str], None]):
-        @ensure_correct_data(default=False, callback=callback)
+        @ensure_correct_data(default=(False,), callback=callback)
         def c(req: Request):
             msg = req.data["message"]
             status = req.data["status"] == "success"
@@ -81,7 +83,7 @@ class Client():
         self.request_manager.request(request, callback=c)
         
     def get_guilds(self, callback: Callable[[list[Guild]], None]):
-        @ensure_correct_data(default=[], callback=callback)
+        @ensure_correct_data(default=([],), callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
                 guilds = [Guild.from_json_serializeable(guild) for guild in req.data["guilds"]]
@@ -93,7 +95,7 @@ class Client():
         self.request_manager.request(request, callback=c)
         
     def get_channels(self, guild_id: int, callback: Callable[[list[Channel]], None]):
-        @ensure_correct_data(default=[], callback=callback)
+        @ensure_correct_data(default=([],), callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
                 channels = [Channel.from_json_serializeable(channel) for channel in req.data["channels"]]
@@ -105,7 +107,7 @@ class Client():
         self.request_manager.request(request, callback=c)
         
     def get_messages(self, channel_id: int, from_id: int, count: int, callback: Callable[[list[Message]], None]):
-        @ensure_correct_data(default=[], callback=callback)
+        @ensure_correct_data(default=([],), callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
                 messages = [Message.from_json_serializeable(message) for message in req.data["messages"]]
@@ -125,7 +127,7 @@ class Client():
         
         c_id = channel.id
         confirmation = {"status": False}
-        @ensure_correct_data(default=None, callback=callback)
+        @ensure_correct_data(default=(None,), callback=callback)
         def c(req: Request):
             if confirmation["status"]:
                 message = Message.from_json_serializeable(req.data["message"])
@@ -157,7 +159,7 @@ class Client():
             logger.warning("Not subscribed to any channel")
             return
         
-        @ensure_correct_data(default=None, callback=callback)
+        @ensure_correct_data(default=(None,), callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
                 message = Message.from_json_serializeable(req.data["message"])
@@ -169,7 +171,7 @@ class Client():
         self.request_manager.request(request, callback=c)
         
     def create_guild(self, name: str, callback: Callable[[Guild | None, str], None]):
-        @ensure_correct_data(default=None, callback=callback)
+        @ensure_correct_data(default=(None, 'Unexpected client error'), callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
                 guild = Guild.from_json_serializeable(req.data["guild"])
@@ -182,7 +184,7 @@ class Client():
         self.request_manager.request(request, callback=c)
         
     def create_channel(self, name: str, guild_id: int, callback: Callable[[Channel | None, str], None]):   
-        @ensure_correct_data(default=None, callback=callback)
+        @ensure_correct_data(default=(None, 'Unexpected client error'), callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
                 channel = Channel.from_json_serializeable(req.data["channel"])
@@ -195,7 +197,7 @@ class Client():
         self.request_manager.request(request, callback=c)
     
     def get_guild_join_code(self, guild_id: int, callback: Callable[[str | None], None]):
-        @ensure_correct_data(default=None, callback=callback)
+        @ensure_correct_data(default=(None,), callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
                 callback(req.data["code"])
@@ -206,7 +208,7 @@ class Client():
         self.request_manager.request(request, callback=c)
         
     def refresh_guild_join_code(self, guild_id: int, callback: Callable[[str | None], None]):
-        @ensure_correct_data(default=None, callback=callback)
+        @ensure_correct_data(default=(None,), callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
                 callback(req.data["code"])
@@ -218,7 +220,7 @@ class Client():
     
             
     def join_guild(self, code: str, callback: Callable[[Guild | None, str], None]):
-        @ensure_correct_data(default=None, callback=callback)
+        @ensure_correct_data(default=(None, 'Unexpected client error'), callback=callback)
         def c(req: Request):
             if req.data["status"] == "success":
                 guild = Guild.from_json_serializeable(req.data["guild"])
@@ -230,6 +232,34 @@ class Client():
         request = Request(RequestType.JOIN_GUILD, {"code": code})
         self.request_manager.request(request, callback=c)
         
+    
+    def get_attachment_file(self, attachment_id: int, callback: Callable[[bytes | None, str], None]):
+        @ensure_correct_data(default=(None, 'Unexpected client error'), callback=callback)
+        def c(req: Request):
+            if req.data["status"] == "success":
+                b64_file: str = req.data["file"]
+                file = base64.b64decode(b64_file)
+                callback(file, '')
+            else:
+                message: str = req.data["message"]
+                callback(None, message)
+            
+        request = Request(RequestType.GET_ATTACHMENT_FILE, {"attachment_id": attachment_id})
+        self.request_manager.request(request, callback=c)
+        
+    def upload_attachment(self, attachment: Attachment, blob: bytes, callback: Callable[[Attachment | None, str], None]):
+        @ensure_correct_data(default=(None, None, 'Unexpected client error'), callback=callback)
+        def c(req: Request):
+            if req.data["status"] == "success":
+                attachment = Attachment.from_json_serializeable(req.data["attachment"])
+                callback(attachment, '')
+            else:
+                message: str = req.data["message"]
+                callback(None, message)
+        
+        b64_blob = base64.b64encode(blob).decode()
+        request = Request(RequestType.UPLOAD_ATTACHMENT, {"attachment": attachment, "file": b64_blob})
+        self.request_manager.request(request, callback=c)
     
     def close(self):
         logger.debug("Closing client")

@@ -288,7 +288,8 @@ class TextChannel(CTkFrame):
                 if stick is not None:
                     self._messages_frame._parent_canvas.yview_moveto(0)
                     
-
+        for message_frame in new_message_frames:
+            message_frame.load_attachment()
         
         if stick is not None:
             self._move_scrollbar_after_load(stick, top=False)

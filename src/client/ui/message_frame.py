@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from loguru import logger
 
 from src.client.client import Client
+from src.client.ui.loadable_message import LoadableImage
 from src.shared.message import Message
 
 FONT_SIZE = 14
@@ -47,6 +48,10 @@ class MessageFrame(CTkFrame):
         self._content_label = CTkLabel(self, text=self.message.content, font=MessageFrame.FONT, justify="left", anchor="w", wraplength=500, pady=4)
         self._content_label.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=(1, 10))
         
+        if self.message.attachment is not None:
+            self._image_frame = LoadableImage(self, image=self.message.attachment, corner_radius=10, client=self._client)
+            self._image_frame.grid(row=2, column=0, columnspan=2, sticky='w', padx=10, pady=(0, 10))
+        
 
         # TODO: Implement attachments
         # Using textbox for a few reasons:
@@ -64,3 +69,7 @@ class MessageFrame(CTkFrame):
     # def _reset_height(self):
     #     height = (FONT_SIZE + 2) * (self._message.content.count("\n")) + self._border_spacing * 2
     #     self._content_label.configure(height=height)
+    
+    def load_attachment(self):
+        if self.message.attachment is not None:
+            self._image_frame.load()

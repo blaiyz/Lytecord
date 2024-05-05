@@ -30,7 +30,7 @@ class AttachmentType(Serializeable, Enum):
 @dataclass(frozen=True)
 class Attachment(AbsDataClass):
     filename: str
-    type: AttachmentType
+    a_type: AttachmentType
     width: int
     height: int
     size: int
@@ -48,7 +48,7 @@ class Attachment(AbsDataClass):
             logger.error(f"Attachment size ({self.size}) cannot be more than {MAX_SIZE}")
             raise ValueError(f"Attachment size cannot be more than {MAX_SIZE}")
         
-        if AttachmentType == AttachmentType.IMAGE:
+        if self.a_type == AttachmentType.IMAGE:
             if self.width <= 0:
                 logger.error(f"Width ({self.width}) cannot be less than or equal to 0")
                 raise ValueError("Width cannot be less than or equal to 0")
@@ -72,4 +72,4 @@ class Attachment(AbsDataClass):
     def __str__(self, with_blob: bool = True):
         if with_blob:
             return super().__str__()
-        return f"Attachment(id: {self.id}, name: {self.filename}, type: {self.type}, {self.width}, {self.height})"
+        return f"Attachment(id: {self.id}, name: {self.filename}, type: {self.a_type}, {self.width}, {self.height})"

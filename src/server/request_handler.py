@@ -1,6 +1,8 @@
 import functools
 from loguru import logger
 from pymongo.errors import PyMongoError
+import base64
+from PIL import Image
 
 from src.shared import *
 from src.shared import login_utils
@@ -10,6 +12,7 @@ from src.server import channel_manager
 from src.server.channel_manager import ServerChannel
 from src.server import db
 from src.server import asset_generator
+from src.shared import attachment
 
 
 TEST_USER_ID = 7190675527303168
@@ -43,6 +46,10 @@ def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Reque
             res_data = handle_refresh_join_code(req.data, client)
         case RequestType.JOIN_GUILD if not subbed:
             res_data = handle_join_guild(req.data, client)
+        case RequestType.GET_ATTACHMENT_FILE if not subbed:
+            res_data = handle_attachment_file(req.data, client)
+        case RequestType.UPLOAD_ATTACHMENT if not subbed:
+            res_data = handle_upload_attachment(req.data, client)
         case _:
             res_data = {"status": "error", "message": "Invalid request type"}
             
@@ -54,10 +61,10 @@ def ensure_correct_data(func):
         try:
             return func(data, *args, **kwargs)
         except (TypeError, ValueError, KeyError) as e:
-            logger.debug(f"Exception: {e} Invalid data: {data} from func: {func.__name__}")
+            logger.warning(f"Exception: {e} Invalid data: {data} from func: {func.__name__}")
             return {"status": "error", "message": "Invalid data"}
         except PyMongoError as e:
-            logger.error(f"Database error: {e}")
+            logger.exception(f"Database error: {e}")
             return {"status": "error", "message": "Database error"}
     return wrapper
             
@@ -278,3 +285,31 @@ def handle_join_guild(data: dict, client: Client) -> dict:
     
     db.user_join_guild(client.user.id, guild.id)
     return {"status": "success", "message": "Joined guild", "guild": guild}
+
+@ensure_correct_data
+def handle_attachment_file(data: dict, client: Client) -> dict:
+    attachment_id = data["attachment_id"]
+    if not db.does_attachment_exist(attachment_id):
+        return {"status": "error", "message": "Invalid attachment id"}
+    
+    attachment = db.get_attachment_file(attachment_id)
+    
+    return {"status": "success", "file": base64.b64encode(attachment).decode('ascii')}
+
+@ensure_correct_data
+def handle_upload_attachment(data: dict, client: Client) -> dict:
+    if client.user is None:
+        return {"status": "error", "message": "Not logged in"}
+    
+    b64: str = data["file"]
+    file = base64.b64decode(b64)
+    filename: str = data["filename"]
+    attachment_type: AttachmentType = AttachmentType.deserialize(data["type"])    
+
+    try:
+        attachment = asset_generator.generate_attachment(file, attachment_type, filename)
+    except ValueError as e:
+        return {"status": "error", "message": f"Could not upload attachment: {e}"}
+    
+    
+    return {"status": "success", "attachment": attachment}

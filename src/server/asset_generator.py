@@ -1,6 +1,7 @@
 from threading import Lock
 from datetime import datetime as dt
 from PIL import Image
+from io import BytesIO
 
 from src.server import db
 from src.shared import Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType, attachment
@@ -56,7 +57,8 @@ def generate_message(channel_id: int, content: str, author: User, attachment: At
         raise ValueError(f"Channel with id {channel_id} does not exist")
     if db.users.find_one({"_id": author.id}) is None:
         raise ValueError(f"User {author} does not exist")
-    # TODO: Check if attachment exists
+    if attachment is not None and db.attachments.find_one({"_id": attachment.id}) is None:
+        raise ValueError(f"Attachment {attachment} does not exist")
     
     id = get_id()
     m = Message(id, channel_id, content, attachment, author, id >> TAG_LENGTH)
@@ -81,7 +83,11 @@ def generate_attachment(data: bytes, attachment_type: AttachmentType, name: str)
     
     width, height = 0, 0
     if attachment_type == AttachmentType.IMAGE:
-        width, height = Image.open(data).size
+        try:
+            image = Image.open(BytesIO(data))
+            width, height = image.size
+        except Exception as e:
+            raise ValueError("Failed to analyze image")
         
     if width > attachment.MAX_WIDTH:
         raise ValueError(f"Width is too large ({width} > {attachment.MAX_WIDTH})")

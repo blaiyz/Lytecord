@@ -10,7 +10,7 @@ TAG_BYTE_LENGTH  = TAG_LENGTH
 
 @dataclass(frozen=True)
 class Message(AbsDataClass):
-    # ID is an integer where the first 22 bits are a tag and the rest is a timestamp
+    # ID is an integer where the first 16 bits are a tag and the rest is a timestamp
     # This allows to sort messages by id and have multiple messages with the same timestamp
     # (This is similar to Discord's snowflake system)
     channel_id: int

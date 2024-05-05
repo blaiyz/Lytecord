@@ -23,6 +23,8 @@ class RequestType(enum.Enum):
     GET_JOIN_CODE = "GetJoinCode"
     REFRESH_JOIN_CODE = "RefreshJoinCode"
     JOIN_GUILD = "JoinGuild"
+    GET_ATTACHMENT_FILE = "GetAttachmentFile"
+    UPLOAD_ATTACHMENT = "UploadAttachment"
     
 
 class Request():

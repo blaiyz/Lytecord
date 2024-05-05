@@ -5,7 +5,7 @@ from pymongo.collection import Collection
 import random
 import string
 
-from src.shared import AbsDataClass, Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType
+from src.shared import AbsDataClass, Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType, attachment
 
 
 db_client = MongoClient("mongodb://localhost:27017/")
@@ -135,9 +135,18 @@ def _map_db_message(m: dict):
     Converts a message from the database to a Message object
     by replacing the author_id with the author object
     """
-    author = convert_id_name(_get_user_raw(m["author_id"]))
+    author = get_user(m["author_id"])
     m["author"] = author
     del m["author_id"]
+    
+    if m["attachment_id"] is not None:
+        attachment = get_attachment(m["attachment_id"])
+        m["attachment"] = attachment
+    else:
+        m["attachment"] = None
+    del m["attachment_id"]
+        
+    
     return Message.from_db_dict(m)
 
 def get_messages(channel_id: int, from_id: int, count: int) -> list[Message]:
@@ -145,8 +154,8 @@ def get_messages(channel_id: int, from_id: int, count: int) -> list[Message]:
     Returns messages from the given channel before the given id
     """
     if from_id != 0:
-        return [_map_db_message(m) for m in messages.find({"channel_id": channel_id, "_id": {"$lt": from_id}}).limit(count).sort("_id", -1)]
-    return [_map_db_message(m) for m in messages.find({"channel_id": channel_id}).limit(count).sort("_id", -1)]
+        return [_map_db_message(m) for m in messages.find({"channel_id": channel_id, "_id": {"$lt": from_id}}).limit(count).sort("_id", -1).max_await_time_ms(1000)]
+    return [_map_db_message(m) for m in messages.find({"channel_id": channel_id}).limit(count).sort("_id", -1).max_await_time_ms(1000)]
 
 
 def get_attachment_file(attachment_id: int) -> bytes:
