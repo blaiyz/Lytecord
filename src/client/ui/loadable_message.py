@@ -30,38 +30,48 @@ class LoadableImage(CTkFrame):
             else:
                 height = MAX_DIMENSIONS
                 width = int(MAX_DIMENSIONS * ratio)
+                
         
         logger.debug(f"Image size: {width}x{height}")
-        super().__init__(*args, corner_radius=corner_radius, width=width, height=height, **kwargs)
+        super().__init__(*args, corner_radius=corner_radius, **kwargs)
         self.client = client
         self._loading = False
         self._image = image
         self._corner_radius = corner_radius
+        self.width = width
+        self.height = height
         
-        self.width, self.height = width, height
+        self._image_label = CTkLabel(self, text="", fg_color="transparent", corner_radius=0)
+        self._image_label.grid(row=1, column=1, sticky="nsew", padx=0, pady=0)
+        self._image_label.grid_remove()
+        
+        scaling = self._image_label._get_widget_scaling()
+        self.width_scaled, self.height_scaled = round(width * scaling), round(height * scaling)
+        self.radius_scaled = round(self._corner_radius * scaling)
+        logger.debug(f"width: {self.width_scaled}, height: {self.height_scaled}, scaling: {scaling}")
         
         self.grid_columnconfigure((0, 2), weight=1, minsize=10)
-        self.grid_columnconfigure(1, minsize=width)
+        self.grid_columnconfigure(1, minsize=self.width_scaled)
         self.grid_rowconfigure((0, 2), weight=1, minsize=10)
-        self.grid_rowconfigure(1, minsize=height)
+        self.grid_rowconfigure(1, minsize=self.height_scaled)
         
         self._loading_animation = CTkProgressBar(self, mode="indeterminate")
         self._loading_animation.grid(row=1, column=0, columnspan=3, sticky="ew", padx=20, pady=10)
         self._loading_animation.grid_remove()
         
-        self._image_label = CTkLabel(self, text="", fg_color="transparent", corner_radius=0)
-        self._image_label.grid(row=1, column=1, sticky="nsew", padx=0, pady=0)
-        self._image_label.grid_remove()
+        self.configure(width=self.width_scaled, height=self.height_scaled)
+        
     
     def _display_image(self):
         if isinstance(self._image, Attachment):
             logger.warning("Load image first")
             return
         
-        logger.debug(f"size: {self._image.size}, format: {self._image.format}, mode: {self._image.mode}")
         
-        converted = self.add_corners(self._image, self._corner_radius)
-        logger.debug(f"width: {self.width}, height: {self.height}")
+        self._image = self.add_corners(self._image, self.radius_scaled)
+        logger.debug(f"width scaled: {self.width_scaled}, height scaled: {self.height_scaled}, radius: {self._corner_radius}")
+        logger.debug(f"size: {self._image.size}, format: {self._image.format}, mode: {self._image.mode}")
+        self._image = self._image.convert("P")
         image = CTkImage(light_image=self._image, size=(self.width, self.height))
         self.configure(corner_radius=0, fg_color="transparent")
         
@@ -114,20 +124,15 @@ class LoadableImage(CTkFrame):
 
     
     @staticmethod
-    def add_corners(image: ImageType, radius: int):
-        """
-        Adds rounded corners to an image
-        """
-        # Source: https://github.com/rudymohammadbali/ctk_components/blob/main/ctk_components.py Line 410
-        
-        circle = Image.new('L', (radius * 2, radius * 2), 0)
+    def add_corners(im: ImageType, rad: int):
+        circle = Image.new('L', (rad * 2, rad * 2), 0)
         draw = ImageDraw.Draw(circle)
-        draw.ellipse((0, 0, radius * 2 - 1, radius * 2 - 1), fill=255)
-        alpha = Image.new('L', image.size, 255)
-        w, h = image.size
-        alpha.paste(circle.crop((0, 0, radius, radius)), (0, 0))
-        alpha.paste(circle.crop((0, radius, radius, radius * 2)), (0, h - radius))
-        alpha.paste(circle.crop((radius, 0, radius * 2, radius)), (w - radius, 0))
-        alpha.paste(circle.crop((radius, radius, radius * 2, radius * 2)), (w - radius, h - radius))
-        image.putalpha(alpha)
-        return image
+        draw.ellipse((0, 0, rad * 2 - 1, rad * 2 - 1), fill=255)
+        alpha = Image.new('L', im.size, 255)
+        w, h = im.size
+        alpha.paste(circle.crop((0, 0, rad, rad)), (0, 0))
+        alpha.paste(circle.crop((0, rad, rad, rad * 2)), (0, h - rad))
+        alpha.paste(circle.crop((rad, 0, rad * 2, rad)), (w - rad, 0))
+        alpha.paste(circle.crop((rad, rad, rad * 2, rad * 2)), (w - rad, h - rad))
+        im.putalpha(alpha)
+        return im
