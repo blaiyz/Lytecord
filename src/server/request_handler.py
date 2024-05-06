@@ -15,8 +15,7 @@ from src.server import asset_generator
 from src.shared import attachment
 
 
-TEST_USER_ID = 7190675527303168
-
+MAX_LOG_SIZE = 2000
 
 def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Request:
     req_type = req.request_type
@@ -61,7 +60,7 @@ def ensure_correct_data(func):
         try:
             return func(data, *args, **kwargs)
         except (TypeError, ValueError, KeyError) as e:
-            logger.warning(f"Exception: {e} Invalid data: {data} from func: {func.__name__}")
+            logger.warning(f"Exception: {e} Invalid data: {str(data)[:MAX_LOG_SIZE] if len(str(data)) >= MAX_LOG_SIZE else data} from func: {func.__name__}")
             return {"status": "error", "message": "Invalid data"}
         except PyMongoError as e:
             logger.exception(f"Database error: {e}")
@@ -76,12 +75,6 @@ def authenticate(data: dict, client: Client) -> dict:
     password: str = data["password"]
     
     if auth_type == "login":
-        # Temporary
-        if username == "" and password == "":
-            user = db.get_user(TEST_USER_ID)
-            client.user = user
-            return {"status": "success", "message": "Authenticated", "user": user}
-        
         try:
             user = db.get_user_by_name(username)
         except KeyError:
@@ -198,8 +191,9 @@ def handle_new_message(data: dict, client: Client) -> dict:
     
     channel = client.current_channel.channel
     content = data["message"]["content"]
+    attachment = Attachment.from_json_serializeable(data["message"]["attachment"])
     
-    message = asset_generator.generate_message(channel.id, content, client.user, None)
+    message = asset_generator.generate_message(channel.id, content, client.user, attachment)
     
     if client.current_channel.send_message(message):
         return {"status": "success", "message": message}

@@ -1,5 +1,6 @@
 from io import BytesIO
 import time
+from typing import Callable
 import customtkinter as ctk
 from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkTextbox, CTkProgressBar, CTkImage
 import tkinter as tk
@@ -12,24 +13,25 @@ from src.client.client import Client
 from src.client.ui.design import IMG_ERR_ICON_LIGHT, IMG_ERR_ICON_DARK, IMG_ICON_LIGHT, IMG_ICON_DARK
 from src.shared.attachment import Attachment
 
-MAX_DIMENSIONS = 2**9
+MAX_WIDTH = 2**10
+MAX_HEIGHT = 2**9
 
 class LoadableImage(CTkFrame):
-    def __init__(self, *args, image: ImageType | Attachment, corner_radius: int, client: Client, **kwargs):
+    def __init__(self, *args, image: ImageType | Attachment, corner_radius: int, client: Client, max_width: int, max_height: int, **kwargs):
         if isinstance(image, Attachment):
             width = image.width
             height = image.height
         else:
             width, height = image.size
             
-        if width > MAX_DIMENSIONS or height > MAX_DIMENSIONS:
+        if width > max_width:
+            ratio = height / width
+            width = max_width
+            height = round(width * ratio)
+        if height > max_height:
             ratio = width / height
-            if width > height:
-                width = MAX_DIMENSIONS
-                height = int(MAX_DIMENSIONS / ratio)
-            else:
-                height = MAX_DIMENSIONS
-                width = int(MAX_DIMENSIONS * ratio)
+            height = max_height
+            width = round(height * ratio)
                 
         
         logger.debug(f"Image size: {width}x{height}")
@@ -40,6 +42,9 @@ class LoadableImage(CTkFrame):
         self._corner_radius = corner_radius
         self.width = width
         self.height = height
+        
+        if isinstance(self._image, ImageType):
+            self._image = self._image.convert("RGBA")
         
         self._image_label = CTkLabel(self, text="", fg_color="transparent", corner_radius=0)
         self._image_label.grid(row=1, column=1, sticky="nsew", padx=0, pady=0)
@@ -70,15 +75,14 @@ class LoadableImage(CTkFrame):
         
         self._image = self.add_corners(self._image, self.radius_scaled)
         logger.debug(f"width scaled: {self.width_scaled}, height scaled: {self.height_scaled}, radius: {self._corner_radius}")
-        logger.debug(f"size: {self._image.size}, format: {self._image.format}, mode: {self._image.mode}")
-        self._image = self._image.convert("P")
+        logger.debug(f"size: {self._image.size}, format: {self._image.format}, mode: {self._image.mode}, pallette: {self._image.palette}, info: {self._image.info}, bands: {self._image.getbands()}")
+        self._image = self._image.convert("RGBA")
         image = CTkImage(light_image=self._image, size=(self.width, self.height))
         self.configure(corner_radius=0, fg_color="transparent")
-        
         self._image_label.configure(image=image)
         self._image_label.grid()
-        
         logger.info("Image loaded")
+        self._loading = False
         
     def _failed_to_load(self, message: str):
         logger.error(message)
@@ -86,14 +90,16 @@ class LoadableImage(CTkFrame):
         self._image_label.configure(image=error_image)
         self._image_label.grid()
     
-    def load(self):
+    def load(self, event_loop_insert: Callable | None = None, delay: int = 0):
         if self._loading:
             return
         self._loading = True
         
         if isinstance(self._image, ImageType):
-            self._display_image()
-            self._loading = False
+            if event_loop_insert:
+                event_loop_insert(delay, self._display_image)
+            else:
+                self._display_image()
             return
         
         def callback(image_file: bytes | None, message: str):
@@ -108,7 +114,7 @@ class LoadableImage(CTkFrame):
                 return
             
             try:
-                image = Image.open(BytesIO(image_file))
+                image = Image.open(BytesIO(image_file)).convert("RGBA")
             except Exception as e:
                 logger.exception("Failed to open image")
                 self._failed_to_load("Failed to open image")
@@ -120,7 +126,10 @@ class LoadableImage(CTkFrame):
         self._loading_animation.start()
         self._loading_animation.grid()
         
-        self.client.get_attachment_file(self._image.id, callback)
+        if event_loop_insert:
+            event_loop_insert(delay, self.client.get_attachment_file, self._image.id, callback)
+        else:
+            self.client.get_attachment_file(self._image.id, callback)
 
     
     @staticmethod

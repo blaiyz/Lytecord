@@ -37,9 +37,9 @@ class Attachment(AbsDataClass):
 
     def __post_init__(self):
         super().__post_init__()
-        if len(self.filename) > 30 or len(self.filename) < 3:
-            logger.error(f"Name ({self.filename}) cannot be more than 30 characters long or less than 3 characters long")
-            raise ValueError("Name cannot be more than 30 characters long or less than 3 characters long")
+        if len(self.filename) > 100 or len(self.filename) < 3:
+            logger.error(f"Name ({self.filename}) cannot be more than 100 characters long or less than 3 characters long")
+            raise ValueError("Name cannot be more than 100 characters long or less than 3 characters long")
         
         if self.size <= 0:
             logger.error(f"Attachment size ({self.size}) cannot be less than or equal to 0")
@@ -73,3 +73,11 @@ class Attachment(AbsDataClass):
         if with_blob:
             return super().__str__()
         return f"Attachment(id: {self.id}, name: {self.filename}, type: {self.a_type}, {self.width}, {self.height})"
+    
+    @staticmethod
+    def is_valid_image(blob: bytes) -> Image.Image | None:
+        try:
+            image = Image.open(BytesIO(blob))
+            return image
+        except:
+            return None

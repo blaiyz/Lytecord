@@ -10,6 +10,8 @@ from src.shared.message import Message
 
 FONT_SIZE = 14
 
+MAX_DISPLAYED_IMAGE_WIDTH = 700
+MAX_DISPLAYED_IMAGE_HEIGHT = 300
 
 def pretty_relative_date(d: datetime) -> str:
     today = datetime.now().date()
@@ -49,7 +51,7 @@ class MessageFrame(CTkFrame):
         self._content_label.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=(1, 10))
         
         if self.message.attachment is not None:
-            self._image_frame = LoadableImage(self, image=self.message.attachment, corner_radius=10, client=self._client)
+            self._image_frame = LoadableImage(self, image=self.message.attachment, corner_radius=10, client=self._client, max_width=MAX_DISPLAYED_IMAGE_WIDTH, max_height=MAX_DISPLAYED_IMAGE_HEIGHT)
             self._image_frame.grid(row=2, column=0, columnspan=2, sticky='w', padx=10, pady=(0, 10))
         
 
@@ -70,6 +72,13 @@ class MessageFrame(CTkFrame):
     #     height = (FONT_SIZE + 2) * (self._message.content.count("\n")) + self._border_spacing * 2
     #     self._content_label.configure(height=height)
     
-    def load_attachment(self):
+    def load_attachment(self, delay: int | None = None) -> int:
         if self.message.attachment is not None:
-            self._image_frame.load()
+            size = self.message.attachment.size
+            relative_delay = round(size * 0.0003)
+            if not delay:
+                self._image_frame.load()
+                return relative_delay
+            self._image_frame.load(self.after, delay)
+            return relative_delay
+        return 0

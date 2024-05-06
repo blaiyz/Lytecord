@@ -258,7 +258,7 @@ class Client():
                 callback(None, message)
         
         b64_blob = base64.b64encode(blob).decode()
-        request = Request(RequestType.UPLOAD_ATTACHMENT, {"attachment": attachment, "file": b64_blob})
+        request = Request(RequestType.UPLOAD_ATTACHMENT, {"filename": attachment.filename, "type": attachment.a_type.value, "file": b64_blob})
         self.request_manager.request(request, callback=c)
     
     def close(self):
