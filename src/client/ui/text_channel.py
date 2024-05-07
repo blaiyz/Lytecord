@@ -33,7 +33,7 @@ DIFF = MAX_MESSAGES - MIN_MESSAGES
 START_ROW = MAX_MESSAGES + MIN_ROW
 MESSAGE_GRID_KWARGS = {"column":0, "sticky":"nsew", "pady":(0, 5)}
 
-THUMBNAIL_MAX_DIM = (300, 300)
+THUMBNAIL_MAX_DIM = (200, 200)
 class TextChannel(CTkFrame):
     """
     Contains the channel messages and the message entry.

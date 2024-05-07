@@ -50,9 +50,10 @@ class LoadableImage(CTkFrame):
         self._image_label.grid(row=1, column=1, sticky="nsew", padx=0, pady=0)
         self._image_label.grid_remove()
         
-        scaling = self._image_label._get_widget_scaling()
+        scaling = self._get_widget_scaling()
         self.width_scaled, self.height_scaled = round(width * scaling), round(height * scaling)
-        self.radius_scaled = round(self._corner_radius * scaling)
+        ratio = image.width / self.width_scaled
+        self.radius_scaled = round(self._corner_radius * scaling * ratio)
         logger.debug(f"width: {self.width_scaled}, height: {self.height_scaled}, scaling: {scaling}")
         
         self.grid_columnconfigure((0, 2), weight=1, minsize=10)
@@ -60,7 +61,7 @@ class LoadableImage(CTkFrame):
         self.grid_rowconfigure((0, 2), weight=1, minsize=10)
         self.grid_rowconfigure(1, minsize=self.height_scaled)
         
-        self._loading_animation = CTkProgressBar(self, mode="indeterminate")
+        self._loading_animation = CTkProgressBar(self, mode="indeterminate", width=self.width)
         self._loading_animation.grid(row=1, column=0, columnspan=3, sticky="ew", padx=20, pady=10)
         self._loading_animation.grid_remove()
         
@@ -74,8 +75,6 @@ class LoadableImage(CTkFrame):
         
         
         self._image = self.add_corners(self._image, self.radius_scaled)
-        logger.debug(f"width scaled: {self.width_scaled}, height scaled: {self.height_scaled}, radius: {self._corner_radius}")
-        logger.debug(f"size: {self._image.size}, format: {self._image.format}, mode: {self._image.mode}, pallette: {self._image.palette}, info: {self._image.info}, bands: {self._image.getbands()}")
         image = CTkImage(light_image=self._image, size=(self.width, self.height))
         self.configure(corner_radius=0, fg_color="transparent")
         self._image_label.configure(image=image)
@@ -145,6 +144,5 @@ class LoadableImage(CTkFrame):
         # Preserve image transparency
         img_alpha = im.getchannel("A")
         alpha.paste(img_alpha, mask=alpha)
-        logger.debug(f"size: {alpha.size}, format: {alpha.format}, mode: {alpha.mode}")
         im.putalpha(alpha)
         return im

@@ -41,7 +41,7 @@ class MessageFrame(CTkFrame):
 
         time = datetime.fromtimestamp(self.message.timestamp)
         self._time_label = CTkLabel(self, text=time.strftime("%H:%M,  ") + pretty_relative_date(time), font=CTkFont(size=FONT_SIZE-2), text_color="#888888")
-        self._time_label.grid(row=0, column=1, sticky="w", padx=10, pady=1)
+        self._time_label.grid(row=0, column=1, sticky="nsw", padx=10, pady=2)
 
         # Use label for now, change to textbox later if possible
         if MessageFrame.FONT is None:

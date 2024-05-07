@@ -1,4 +1,5 @@
 import functools
+import zlib
 from loguru import logger
 from pymongo.errors import PyMongoError
 import base64
@@ -288,7 +289,8 @@ def handle_attachment_file(data: dict, client: Client) -> dict:
     
     attachment = db.get_attachment_file(attachment_id)
     
-    return {"status": "success", "file": base64.b64encode(attachment).decode('ascii')}
+    compressed = zlib.compress(attachment)
+    return {"status": "success", "file": base64.b64encode(compressed).decode('ascii')}
 
 @ensure_correct_data
 def handle_upload_attachment(data: dict, client: Client) -> dict:
@@ -296,7 +298,8 @@ def handle_upload_attachment(data: dict, client: Client) -> dict:
         return {"status": "error", "message": "Not logged in"}
     
     b64: str = data["file"]
-    file = base64.b64decode(b64)
+    compressed = base64.b64decode(b64)
+    file = zlib.decompress(compressed)
     filename: str = data["filename"]
     attachment_type: AttachmentType = AttachmentType.deserialize(data["type"])    
 

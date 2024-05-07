@@ -8,6 +8,7 @@ from loguru import logger
 from functools import wraps
 from enum import Enum
 import base64
+import zlib
 
 from src.shared.attachment import Attachment
 from src.shared.protocol import HOST
@@ -238,7 +239,8 @@ class Client():
         def c(req: Request):
             if req.data["status"] == "success":
                 b64_file: str = req.data["file"]
-                file = base64.b64decode(b64_file)
+                compressed = base64.b64decode(b64_file)
+                file = zlib.decompress(compressed)
                 callback(file, '')
             else:
                 message: str = req.data["message"]
@@ -257,7 +259,8 @@ class Client():
                 message: str = req.data["message"]
                 callback(None, message)
         
-        b64_blob = base64.b64encode(blob).decode()
+        compressed = zlib.compress(blob)
+        b64_blob = base64.b64encode(compressed).decode()
         request = Request(RequestType.UPLOAD_ATTACHMENT, {"filename": attachment.filename, "type": attachment.a_type.value, "file": b64_blob})
         self.request_manager.request(request, callback=c)
     
