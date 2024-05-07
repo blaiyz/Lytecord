@@ -76,7 +76,6 @@ class LoadableImage(CTkFrame):
         self._image = self.add_corners(self._image, self.radius_scaled)
         logger.debug(f"width scaled: {self.width_scaled}, height scaled: {self.height_scaled}, radius: {self._corner_radius}")
         logger.debug(f"size: {self._image.size}, format: {self._image.format}, mode: {self._image.mode}, pallette: {self._image.palette}, info: {self._image.info}, bands: {self._image.getbands()}")
-        self._image = self._image.convert("RGBA")
         image = CTkImage(light_image=self._image, size=(self.width, self.height))
         self.configure(corner_radius=0, fg_color="transparent")
         self._image_label.configure(image=image)
@@ -143,5 +142,9 @@ class LoadableImage(CTkFrame):
         alpha.paste(circle.crop((0, rad, rad, rad * 2)), (0, h - rad))
         alpha.paste(circle.crop((rad, 0, rad * 2, rad)), (w - rad, 0))
         alpha.paste(circle.crop((rad, rad, rad * 2, rad * 2)), (w - rad, h - rad))
+        # Preserve image transparency
+        img_alpha = im.getchannel("A")
+        alpha.paste(img_alpha, mask=alpha)
+        logger.debug(f"size: {alpha.size}, format: {alpha.format}, mode: {alpha.mode}")
         im.putalpha(alpha)
         return im
