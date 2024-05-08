@@ -1,5 +1,6 @@
-from sys import stderr
 import re
+from sys import stderr
+
 import loguru
 from loguru import logger
 

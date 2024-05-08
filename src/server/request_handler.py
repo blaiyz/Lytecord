@@ -1,20 +1,17 @@
+import base64
 import functools
 import zlib
-from loguru import logger
-from pymongo.errors import PyMongoError
-import base64
-from PIL import Image
 
-from src.shared import *
-from src.shared import login_utils
+from loguru import logger
+from PIL import Image
+from pymongo.errors import PyMongoError
+
+from src.server import asset_generator, channel_manager, db
+from src.server.channel_manager import ServerChannel
 from src.server.channel_subscription import ChannelSubscription
 from src.server.client import Client
-from src.server import channel_manager
-from src.server.channel_manager import ServerChannel
-from src.server import db
-from src.server import asset_generator
-from src.shared import attachment
-
+from src.shared import *
+from src.shared import attachment, login_utils
 
 MAX_LOG_SIZE = 2000
 

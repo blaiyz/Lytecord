@@ -1,12 +1,11 @@
-import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont
-import tkinter as tk
-
-from collections.abc import Callable
 import os
+import tkinter as tk
+from collections.abc import Callable
+
+import customtkinter as ctk
+from customtkinter import CTkButton, CTkEntry, CTkFont, CTkFrame, CTkLabel
 
 from src.client.client import AuthType
-
 
 LOWER_ROW_GRID = 100
 AUTH_BUTTON_ROW = 50

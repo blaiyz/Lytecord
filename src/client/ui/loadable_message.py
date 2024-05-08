@@ -1,17 +1,21 @@
-from io import BytesIO
 import os
-from typing import Callable
-import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkTextbox, CTkProgressBar, CTkImage
 import tkinter as tk
-from tkinter import filedialog
 from datetime import datetime
+from io import BytesIO
+from tkinter import filedialog
+from typing import Callable
+
+import customtkinter as ctk
+from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkImage,
+                           CTkLabel, CTkProgressBar, CTkTextbox)
 from loguru import logger
 from PIL import Image, ImageDraw
 from PIL.Image import Image as ImageType
 
 from src.client.client import Client
-from src.client.ui.design import IMG_ERR_ICON_LIGHT, IMG_ERR_ICON_DARK, IMG_ICON_LIGHT, IMG_ICON_DARK, DOWNLOAD_ICON_DARK, DOWNLOAD_ICON_LIGHT
+from src.client.ui.design import (DOWNLOAD_ICON_DARK, DOWNLOAD_ICON_LIGHT,
+                                  IMG_ERR_ICON_DARK, IMG_ERR_ICON_LIGHT,
+                                  IMG_ICON_DARK, IMG_ICON_LIGHT)
 from src.shared.attachment import Attachment
 
 MAX_WIDTH = 2**10

@@ -1,9 +1,10 @@
-from loguru import logger
 from dataclasses import dataclass
-from src.shared.abs_data_class import AbsDataClass
+
+from loguru import logger
+
+from src.shared.abs_data_class import TAG_LENGTH, AbsDataClass
 from src.shared.attachment import Attachment
 from src.shared.user import User
-from src.shared.abs_data_class import TAG_LENGTH
 
 MAX_MESSAGE_LENGTH = 1500
 TAG_BYTE_LENGTH  = TAG_LENGTH

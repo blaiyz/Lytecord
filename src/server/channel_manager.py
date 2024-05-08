@@ -1,6 +1,7 @@
-from loguru import logger
-import threading
 import bisect
+import threading
+
+from loguru import logger
 
 from src.server.channel_subscription import ChannelSubscription
 from src.shared.channel import Channel

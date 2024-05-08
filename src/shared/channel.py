@@ -1,10 +1,10 @@
-from enum import Enum
-from loguru import logger
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
+from enum import Enum
+
+from loguru import logger
 
 from src.shared.abs_data_class import AbsDataClass, Serializeable
-
 
 MAX_NAME_LENGTH = 20
 MIN_NAME_LENGTH = 3

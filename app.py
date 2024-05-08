@@ -1,19 +1,19 @@
+import os
+from enum import Enum
 from sys import stderr
 from tkinter import Tk
+from typing import Callable, Tuple
+
 import customtkinter
 from loguru import logger
 from PIL import Image
-from enum import Enum
-from typing import Tuple, Callable
-import os
 
-
+import src.shared.loguru_config
+from src.client.client import AuthType, Client
 from src.client.ui.login_frame import LoginFrame
 from src.client.ui.main_frame import MainFrame
-from src.client.client import Client, AuthType
-from src.shared.protocol import HOST
 from src.shared import login_utils
-import src.shared.loguru_config
+from src.shared.protocol import HOST
 
 customtkinter.set_appearance_mode("system")
 

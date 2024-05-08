@@ -1,12 +1,12 @@
-from datetime import datetime
 import bisect
 from collections.abc import Callable
+from datetime import datetime
+
 from loguru import logger
 
 from src.client.client import Client
 from src.shared.channel import Channel
-from src.shared.message import Message, TAG_BYTE_LENGTH
-
+from src.shared.message import TAG_BYTE_LENGTH, Message
 
 THRESHOLD = 30
 

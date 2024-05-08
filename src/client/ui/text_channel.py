@@ -1,23 +1,24 @@
-from io import BytesIO
 import os
-import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame, CTkImage
 import tkinter as tk
-from tkinter import filedialog
 from datetime import datetime
+from io import BytesIO
+from tkinter import filedialog
+
+import customtkinter as ctk
+from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkImage,
+                           CTkLabel, CTkScrollableFrame)
 from loguru import logger
 from PIL import Image, ImageGrab
 
-
 from src.client.client import Client
+from src.client.message_manager import THRESHOLD, MessageManager
+from src.client.ui.design import ATTACHMENT_ICON_DARK, ATTACHMENT_ICON_LIGHT
 from src.client.ui.loadable_message import LoadableImage
 from src.client.ui.message_frame import MessageFrame
-from src.client.message_manager import MessageManager, THRESHOLD
-from src.shared.attachment import Attachment, AttachmentType, MAX_SIZE as ATTACHMENT_MAX_SIZE
+from src.shared.attachment import MAX_SIZE as ATTACHMENT_MAX_SIZE
+from src.shared.attachment import Attachment, AttachmentType
 from src.shared.channel import Channel, ChannelType
-from src.shared.message import TAG_BYTE_LENGTH, Message, MAX_MESSAGE_LENGTH
-from src.client.ui.design import ATTACHMENT_ICON_DARK, ATTACHMENT_ICON_LIGHT
-
+from src.shared.message import MAX_MESSAGE_LENGTH, TAG_BYTE_LENGTH, Message
 
 ENTRY_COLOR = "#303030"
 HOVER_COLOR = "#727272"

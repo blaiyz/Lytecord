@@ -1,6 +1,7 @@
-from PIL import Image
 import os
 from os.path import dirname
+
+from PIL import Image
 
 # Lytecord root directory
 DIR = os.path.join(dirname(dirname(dirname(dirname(os.path.realpath(__file__))))), "assets")

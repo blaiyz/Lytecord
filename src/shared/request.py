@@ -1,11 +1,13 @@
 from __future__ import annotations
+
 import enum
-import json
 import io
+import json
 from collections.abc import Callable
 
-from src.shared.abs_data_class import AbsDataClass, Encoder, Serializeable
 import src.shared.request as request
+from src.shared.abs_data_class import AbsDataClass, Encoder, Serializeable
+
 
 class RequestType(enum.Enum):
     AUTHENTICATE = "Authenticate"

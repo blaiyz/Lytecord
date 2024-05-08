@@ -1,21 +1,21 @@
-from customtkinter import CTk
-
-from dataclasses import dataclass
-import ssl
-import socket
-from typing import Callable
-from loguru import logger
-from functools import wraps
-from enum import Enum
 import base64
+import socket
+import ssl
 import zlib
+from dataclasses import dataclass
+from enum import Enum
+from functools import wraps
+from typing import Callable
 
-from src.shared.attachment import Attachment
-from src.shared.protocol import HOST, CERT
-from src.shared import Request, RequestType, Channel, ChannelType, Guild, Message, login_utils
+from customtkinter import CTk
+from loguru import logger
+
 from src.client.request_manager import RequestManager
+from src.shared import (Channel, ChannelType, Guild, Message, Request,
+                        RequestType, login_utils)
+from src.shared.attachment import Attachment
+from src.shared.protocol import CERT, HOST
 from src.shared.user import User
-
 
 
 def ensure_correct_data(default: tuple, callback: Callable):

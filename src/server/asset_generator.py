@@ -1,13 +1,14 @@
-from threading import Lock
 from datetime import datetime as dt
-from PIL import Image
 from io import BytesIO
+from threading import Lock
+
 from loguru import logger
+from PIL import Image
 
 from src.server import db
-from src.shared import Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType, attachment
+from src.shared import (Attachment, AttachmentType, Channel, ChannelType,
+                        Guild, Message, User, attachment)
 from src.shared.abs_data_class import TAG_LENGTH
-
 
 lock = Lock()
 tag = 0

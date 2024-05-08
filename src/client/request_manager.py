@@ -1,19 +1,17 @@
-from customtkinter import CTk
-
-from queue import Queue
 import socket
 import ssl
 import threading
-from threading import Thread
-from collections.abc import Callable
 import time
+from collections.abc import Callable
+from queue import Queue
+from threading import Thread
+
+from customtkinter import CTk
 from loguru import logger
 
-
-from src.shared.request import Request, RequestType
 from src.shared import protocol
 from src.shared.protocol import RequestWrapper, SocketClosedException
-
+from src.shared.request import Request, RequestType
 
 # The maximum number of requests that can be sent at once
 # Should be enough (after all you don't send 1000 requests at once)

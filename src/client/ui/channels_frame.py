@@ -1,17 +1,21 @@
-import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame, CTkImage, CTkInputDialog
-from CTkMessagebox import CTkMessagebox
 import tkinter as tk
-from PIL import Image
+
+import customtkinter as ctk
+from CTkMessagebox import CTkMessagebox
+from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkImage,
+                           CTkInputDialog, CTkLabel, CTkScrollableFrame)
 from loguru import logger
+from PIL import Image
 
 from src.client.client import Client
-from src.client.ui.channel_button import ChannelButton
 from src.client.ui.channel_box import ChannelBox
-from src.client.ui.design import CREATE_GUILD_ICON_DARK, CREATE_GUILD_ICON_LIGHT, REFRESH_ICON_DARK, REFRESH_ICON_LIGHT
-from src.shared.channel import Channel, ChannelType, MIN_NAME_LENGTH, MAX_NAME_LENGTH
+from src.client.ui.channel_button import ChannelButton
+from src.client.ui.design import (CREATE_GUILD_ICON_DARK,
+                                  CREATE_GUILD_ICON_LIGHT, REFRESH_ICON_DARK,
+                                  REFRESH_ICON_LIGHT)
+from src.shared.channel import (MAX_NAME_LENGTH, MIN_NAME_LENGTH, Channel,
+                                ChannelType)
 from src.shared.guild import Guild
-
 
 FG_COLOR = ("#8e8e8e", "#353535")
 
