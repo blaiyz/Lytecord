@@ -23,5 +23,8 @@
   <tr>
     <td><a href="https://www.flaticon.com/free-icons/add" title="add icons">Add icons created by Freepik - Flaticon</a></td>
   </tr>
+  <tr>
+    <td><a href="https://www.flaticon.com/free-icons/hashtag" title="hashtag icons">Hashtag icons created by Mayor Icons - Flaticon</a></td>
+  </tr>
 </table>
 </details>

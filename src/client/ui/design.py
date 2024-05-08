@@ -36,3 +36,11 @@ CREATE_GUILD_ICON_DARK = Image.open(os.path.join(DIR, "icons/create_guild512dark
 # Refresh code
 REFRESH_ICON_LIGHT = Image.open(os.path.join(DIR, "icons/refresh128light.png"))
 REFRESH_ICON_DARK = Image.open(os.path.join(DIR, "icons/refresh128dark.png"))
+
+# Download button
+DOWNLOAD_ICON_LIGHT = Image.open(os.path.join(DIR, "icons/download128light.png"))
+DOWNLOAD_ICON_DARK = Image.open(os.path.join(DIR, "icons/download128dark.png"))
+
+# Hashtag
+HASHTAG_ICON_LIGHT = Image.open(os.path.join(DIR, "icons/hashtag128light.png"))
+HASHTAG_ICON_DARK = Image.open(os.path.join(DIR, "icons/hashtag128dark.png"))

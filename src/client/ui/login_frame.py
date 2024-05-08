@@ -75,10 +75,15 @@ class LoginFrame(ctk.CTkFrame):
         # create signup button
         self.switch_auth_mode_button = ctk.CTkButton(self.login_frame, text="Signup", command=self.switch_authentication_mode)
         self.switch_auth_mode_button.grid(row=LOWER_ROW_GRID + 1, column=1, pady=(10, 30))
+        
+        self.bind("<Return>", self.auth_button_event, add=True)
+        self.username_entry.bind("<Return>", self.auth_button_event, add=True)
+        self.password_entry.bind("<Return>", self.auth_button_event, add=True)
+        self.password_confirm.bind("<Return>", self.auth_button_event, add=True)
 
 
 
-    def auth_button_event(self):
+    def auth_button_event(self, *args):
         
         # Implement login logic here
         # If login is successful, hide login frame and show main frame

@@ -1,21 +1,23 @@
 from io import BytesIO
-import time
+import os
 from typing import Callable
 import customtkinter as ctk
 from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkTextbox, CTkProgressBar, CTkImage
 import tkinter as tk
+from tkinter import filedialog
 from datetime import datetime
 from loguru import logger
 from PIL import Image, ImageDraw
 from PIL.Image import Image as ImageType
 
 from src.client.client import Client
-from src.client.ui.design import IMG_ERR_ICON_LIGHT, IMG_ERR_ICON_DARK, IMG_ICON_LIGHT, IMG_ICON_DARK
+from src.client.ui.design import IMG_ERR_ICON_LIGHT, IMG_ERR_ICON_DARK, IMG_ICON_LIGHT, IMG_ICON_DARK, DOWNLOAD_ICON_DARK, DOWNLOAD_ICON_LIGHT
 from src.shared.attachment import Attachment
 
 MAX_WIDTH = 2**10
 MAX_HEIGHT = 2**9
 
+FG_COLOR = ("#8e8e8e", "#353535")
 class LoadableImage(CTkFrame):
     def __init__(self, *args, image: ImageType | Attachment, corner_radius: int, client: Client, max_width: int, max_height: int, **kwargs):
         if isinstance(image, Attachment):
@@ -45,6 +47,8 @@ class LoadableImage(CTkFrame):
         
         if isinstance(self._image, ImageType):
             self._image = self._image.convert("RGBA")
+        else: 
+            self._filename: str = self._image.filename
         
         self._image_label = CTkLabel(self, text="", fg_color="transparent", corner_radius=0)
         self._image_label.grid(row=1, column=1, sticky="nsew", padx=0, pady=0)
@@ -56,14 +60,16 @@ class LoadableImage(CTkFrame):
         self.radius_scaled = round(self._corner_radius * scaling * ratio)
         logger.debug(f"width: {self.width_scaled}, height: {self.height_scaled}, scaling: {scaling}")
         
-        self.grid_columnconfigure((0, 2), weight=1, minsize=10)
+        self.grid_columnconfigure((0, 2), minsize=10)
         self.grid_columnconfigure(1, minsize=self.width_scaled)
-        self.grid_rowconfigure((0, 2), weight=1, minsize=10)
+        self.grid_rowconfigure((0, 2), minsize=10)
         self.grid_rowconfigure(1, minsize=self.height_scaled)
         
         self._loading_animation = CTkProgressBar(self, mode="indeterminate", width=self.width)
         self._loading_animation.grid(row=1, column=0, columnspan=3, sticky="ew", padx=20, pady=10)
         self._loading_animation.grid_remove()
+        
+        self._download_button: CTkButton | None = None
         
         self.configure(width=self.width_scaled, height=self.height_scaled)
         
@@ -74,8 +80,8 @@ class LoadableImage(CTkFrame):
             return
         
         
-        self._image = self.add_corners(self._image, self.radius_scaled)
-        image = CTkImage(light_image=self._image, size=(self.width, self.height))
+        converted = self.add_corners(self._image.copy(), self.radius_scaled)
+        image = CTkImage(light_image=converted, size=(self.width, self.height))
         self.configure(corner_radius=0, fg_color="transparent")
         self._image_label.configure(image=image)
         self._image_label.grid()
@@ -120,6 +126,10 @@ class LoadableImage(CTkFrame):
                 
             self._image = image
             self._display_image()
+            
+            download_icon = CTkImage(light_image=DOWNLOAD_ICON_LIGHT, dark_image=DOWNLOAD_ICON_DARK, size=(30, 30))
+            self._download_button = CTkButton(self, text="", image=download_icon, command=self.download, corner_radius=5, fg_color=FG_COLOR, width=30, height=30)
+            self._download_button.grid(row=1, column=4, sticky="ne", padx=10)
                 
         self._loading_animation.start()
         self._loading_animation.grid()
@@ -146,3 +156,26 @@ class LoadableImage(CTkFrame):
         alpha.paste(img_alpha, mask=alpha)
         im.putalpha(alpha)
         return im
+    
+    def download(self):
+        if isinstance(self._image, Attachment):
+            logger.warning("Load image first")
+            return
+        
+        filetypes = [("PNG files", "*.png"), ("JPEG files", "*.jpg"), ("BMP files", "*.bmp"), ("GIF files", "*.gif"), ("All files", "*.*")]
+        extension = os.path.splitext(self._filename)[1]
+        filepath = filedialog.asksaveasfilename(defaultextension=extension,filetypes=filetypes, title="Save image as")
+        extension = os.path.splitext(filepath)[1]
+        if extension != '.png':
+            image_to_save = self._image.copy().convert("RGB")
+        else:
+            image_to_save = self._image.copy()
+        
+        if not filepath:
+            return
+        
+        try:
+            image_to_save.save(filepath, format=extension[1:].upper())
+        except Exception as e:
+            logger.exception("Failed to save image")
+            return
