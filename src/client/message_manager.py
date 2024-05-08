@@ -5,12 +5,8 @@ from loguru import logger
 
 from src.client.client import Client
 from src.shared.channel import Channel
-from src.shared.message import Message, TAG_BIT_LENGTH
+from src.shared.message import Message, TAG_BYTE_LENGTH
 
-TEST_MESSAGE = """Test message abcdefghijklmnopqrstuvwxyz 123123123123983475094387520862314912
-test test
-test
-sussy"""
 
 THRESHOLD = 30
 
@@ -52,7 +48,7 @@ class MessageManager():
             self.fetch_messages(received=callback)
         
     
-    def fetch_messages(self, from_id: int = 0, count: int = 50, received: Callable | None = None):
+    def fetch_messages(self, from_id: int = 0, count: int = 100, received: Callable | None = None):
         """
         Fetch messages from the server.
         

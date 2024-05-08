@@ -17,9 +17,9 @@ class Guild(AbsDataClass):
         if len(self.name) > MAX_NAME_LENGTH or len(self.name) < MIN_NAME_LENGTH:
             logger.error(f"Name ({self.name}) cannot be more than {MAX_NAME_LENGTH} characters long or less than {MIN_NAME_LENGTH} characters long")
             raise ValueError(f"Name cannot be more than {MAX_NAME_LENGTH} characters long or less than {MIN_NAME_LENGTH} characters long")
-        if self.owner_id <= 0:
-            logger.error(f"Author ID ({self.owner_id}) cannot be less than or equal to 0")
-            raise ValueError("Author ID cannot be less than or equal to 0")
+        if self.owner_id < 0:
+            logger.error(f"Author ID ({self.owner_id}) cannot be less than 0")
+            raise ValueError("Author ID cannot be less than 0")
 
     def get_icon(self)->CTkImage:
         raise NotImplementedError

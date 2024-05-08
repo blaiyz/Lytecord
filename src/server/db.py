@@ -1,8 +1,11 @@
 from loguru import logger
 from pymongo import MongoClient
+import gridfs
 from pymongo.collection import Collection
+import random
+import string
 
-from src.shared import AbsDataClass, Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType
+from src.shared import AbsDataClass, Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType, attachment
 
 
 db_client = MongoClient("mongodb://localhost:27017/")
@@ -11,9 +14,17 @@ guilds: Collection = db["guilds"]
 channels: Collection = db["channels"]
 users: Collection = db["users"]
 messages: Collection = db["messages"]
-attachments: Collection = db["attachments"]
 passwords: Collection = db["passwords"]
+attachments = gridfs.GridFS(db, "attachments")
 
+def convert_id_name(d: dict) -> dict:
+    d["id"] = d["_id"]
+    del d["_id"]
+    return d
+
+
+def get_random_hex_code(length=16):
+    return ''.join(random.choices(string.hexdigits, k=length))
 
 def get_user_guilds(user_id: int) -> list[Guild]:
     cursor = users.find_one({"_id": user_id})
@@ -37,6 +48,24 @@ def get_guild(guild_id: int) -> Guild:
 
 def get_guild_join_code(guild_id: int) -> str:
     return _get_guild_raw(guild_id)["join_code"]
+
+def refresh_guild_join_code(guild_id: int) -> str:
+    join_code = get_random_hex_code()
+    
+    while guilds.find_one({"join_code": join_code}) is not None:
+        join_code = get_random_hex_code()
+        
+    guilds.update_one({"_id": guild_id}, {"$set": {"join_code": join_code}})
+    return join_code
+
+def get_guild_by_code(code: str) -> Guild | None:
+    guild = guilds.find_one({"join_code": code})
+    if guild is None:
+        return None
+    return Guild.from_db_dict(guild)
+    
+def get_guild_owner(guild_id: int) -> int:
+    return _get_guild_raw(guild_id)["owner_id"]
 
 
 def get_channels(guild_id: int)-> list[Channel]:
@@ -101,14 +130,54 @@ def get_password_hash(user_id: int) -> str:
     return result["password_hash"]
 
 
+def _map_db_message(m: dict):
+    """
+    Converts a message from the database to a Message object
+    by replacing the author_id with the author object
+    """
+    author = get_user(m["author_id"])
+    m["author"] = author
+    del m["author_id"]
+    
+    if m["attachment_id"] is not None:
+        attachment = get_attachment(m["attachment_id"])
+        m["attachment"] = attachment
+    else:
+        m["attachment"] = None
+    del m["attachment_id"]
+        
+    
+    return Message.from_db_dict(m)
 
 def get_messages(channel_id: int, from_id: int, count: int) -> list[Message]:
     """
     Returns messages from the given channel before the given id
     """
     if from_id != 0:
-        return [Message.from_db_dict(m) for m in messages.find({"channel_id": channel_id, "_id": {"$lt": from_id}}).limit(count).sort("_id", -1)]
-    return [Message.from_db_dict(m) for m in messages.find({"channel_id": channel_id}).limit(count).sort("_id", -1)]
+        return [_map_db_message(m) for m in messages.find({"channel_id": channel_id, "_id": {"$lt": from_id}}).limit(count).sort("_id", -1).max_await_time_ms(1000)]
+    return [_map_db_message(m) for m in messages.find({"channel_id": channel_id}).limit(count).sort("_id", -1).max_await_time_ms(1000)]
 
 
+def get_attachment_file(attachment_id: int) -> bytes:
+    if not attachments.exists(attachment_id):
+        raise KeyError(f"Attachment with id {attachment_id} does not exist")
+    
+    return attachments.get(attachment_id).read()
 
+def _get_attachment_raw(attachment_id: int) -> gridfs.GridOut:
+    if not attachments.exists(attachment_id):
+        raise KeyError(f"Attachment with id {attachment_id} does not exist")
+    
+    return attachments.get(attachment_id)
+
+def does_attachment_exist(attachment_id: int) -> bool:
+    return attachments.exists(attachment_id)
+
+def get_attachment(attachment_id: int) -> Attachment:
+    attachment = _get_attachment_raw(attachment_id)
+    filename = attachment.filename
+    attachment_type: str = attachment.attachment_type
+    width: int = attachment.width
+    height: int = attachment.height
+    size = attachment.length
+    return Attachment(attachment_id, filename, AttachmentType(attachment_type), width, height, size)

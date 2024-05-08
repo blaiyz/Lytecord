@@ -2,8 +2,9 @@
 .VSCodeCounter/
 examples/
 
-cert.pem
-key.pem
+server.crt
+server.csr
+server.key
 
 # Python boilerplate gitignore pasted from https://github.com/github/gitignore/blob/main/Python.gitignore
 

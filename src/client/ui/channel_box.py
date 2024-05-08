@@ -41,8 +41,10 @@ class ChannelBox(CTkFrame):
     def set_channel(self, channel: Channel | None) -> bool:
         logger.info(f"Setting channel; new: {channel}, old: {self._channel}")
         if self._channel == channel:
-            logger.warning("Tried to set the same channel")
-            return False
+            if channel is not None:
+                logger.warning("Tried to set the same channel")
+                return False
+            return True
         
         success = self._text_channel.set_channel(channel)
         if not success:

@@ -12,10 +12,14 @@ from src.server.client import Client
 
 def main():
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain(certfile="cert.pem", keyfile="key.pem")
+    context.load_cert_chain(certfile="server.crt", keyfile="server.key")
     bindsocket = socket.socket()
     bindsocket.bind(HOST)
     bindsocket.listen(5)
+    
+    from src.server import db
+    
+    logger.info("Server started")
         
     while True:
         sock, addr = bindsocket.accept()

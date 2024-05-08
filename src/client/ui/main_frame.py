@@ -49,7 +49,7 @@ class SidePanel(CTkFrame):
         self.cf = ChannelsFrame(self, channel_box=self.channel_box, client=self.client)
         self.cf.grid(row=0, column=1, sticky="nsew")
 
-        self.gf = GuildsFrame(self, cf=self.cf, client=self.client)
+        self.gf = GuildsFrame(self, channels_frame=self.cf, client=self.client)
         self.gf.grid(row=0, column=0, sticky="nsew")
 
     def load(self):

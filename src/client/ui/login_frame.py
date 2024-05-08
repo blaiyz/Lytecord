@@ -3,8 +3,6 @@ from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont
 import tkinter as tk
 
 from collections.abc import Callable
-import PIL.Image as im 
-import PIL.ImageTk as imtk
 import os
 
 from src.client.client import AuthType
@@ -87,7 +85,7 @@ class LoginFrame(ctk.CTkFrame):
         # If login is unsuccessful, show error message
         def callback(success: bool, message: str):
             if not success:
-                self.error_label.configure(text=message)
+                self.error_label.configure(text=message, text_color="red")
             else:
                 self.error_label.configure(text= "Success!\n Loggin in...", text_color="green")
             self.error_label.grid()
@@ -97,6 +95,8 @@ class LoginFrame(ctk.CTkFrame):
                 callback(False, "Passwords do not match")
                 return
             
+        self.error_label.configure(text="Authenticating...", text_color=("black", "white"))
+        self.error_label.grid()
         self.auth(self.state, self.username_entry.get(), self.password_entry.get(), callback)
 
         
