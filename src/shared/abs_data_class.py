@@ -43,6 +43,9 @@ class Serializeable:
         after deserializing data to a dictionary.
         """
         try:
+            if data is None:
+                raise ValueError("Data cannot be None")
+            
             # Get the types of the fields
             field_types = all_annotations(cls)
             field_names = field_types.keys()
@@ -68,7 +71,7 @@ class Serializeable:
                         converted_data[field] = field_type.from_json_serializeable(value)
                     else:
                         # Reached a primitive type, cannot convert
-                        converted_data[field] = field_type(value)
+                        converted_data[field] = field_type(value) # type: ignore # TODO: Fix this
                 else:
                     converted_data[field] = field_type(value)
             # Create a new instance of the class with the converted data

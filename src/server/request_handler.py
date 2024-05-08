@@ -60,7 +60,7 @@ def ensure_correct_data(func):
     def wrapper(data, *args, **kwargs):
         try:
             return func(data, *args, **kwargs)
-        except (TypeError, ValueError, KeyError) as e:
+        except (TypeError, ValueError, KeyError, AttributeError) as e:
             logger.warning(f"Exception: {e} Invalid data: {str(data)[:MAX_LOG_SIZE] if len(str(data)) >= MAX_LOG_SIZE else data} from func: {func.__name__}")
             return {"status": "error", "message": "Invalid data"}
         except PyMongoError as e:
@@ -192,7 +192,11 @@ def handle_new_message(data: dict, client: Client) -> dict:
     
     channel = client.current_channel.channel
     content = data["message"]["content"]
-    attachment = Attachment.from_json_serializeable(data["message"]["attachment"])
+    attachment_dict = data["message"]["attachment"]
+    if attachment_dict is None:
+        attachment = None
+    else:
+        attachment = Attachment.from_json_serializeable(attachment_dict)
     
     message = asset_generator.generate_message(channel.id, content, client.user, attachment)
     
