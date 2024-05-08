@@ -2,6 +2,7 @@ from threading import Lock
 from datetime import datetime as dt
 from PIL import Image
 from io import BytesIO
+from loguru import logger
 
 from src.server import db
 from src.shared import Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType, attachment
@@ -87,6 +88,7 @@ def generate_attachment(data: bytes, attachment_type: AttachmentType, name: str)
             image = Image.open(BytesIO(data))
             width, height = image.size
         except Exception as e:
+            logger.exception('Failed to analyze image')
             raise ValueError("Failed to analyze image")
         
     if width > attachment.MAX_WIDTH:

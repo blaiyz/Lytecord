@@ -1,3 +1,4 @@
+from io import BytesIO
 import os
 import customtkinter as ctk
 from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame, CTkImage
@@ -5,7 +6,7 @@ import tkinter as tk
 from tkinter import filedialog
 from datetime import datetime
 from loguru import logger
-from PIL import Image
+from PIL import Image, ImageGrab
 
 
 from src.client.client import Client
@@ -71,6 +72,8 @@ class TextChannel(CTkFrame):
         
         self._entry = CTkEntry(self._entry_frame, fg_color="transparent", border_width=0, font=CTkFont(family="Helvetica", size=18), corner_radius=5, validate="key", validatecommand=(self.master.register(self._character_limit), '%d', '%P')) 
         self._entry.bind("<Return>", self._send_message)
+        self._entry.bind("<Control-v>", self._paste_image)
+        self._entry.bind("<Escape>", self._clear_attachment, add=True)
         
         self._messages_frame.grid(row=0, column=0, sticky="nsew")
         self._entry_frame.grid(row=1, column=0, sticky="sew", padx=10, pady=15)
@@ -446,7 +449,52 @@ class TextChannel(CTkFrame):
         self._attachment_image.grid(row=0, column=0, sticky="nsew")
         self._attachment_image.load()
         
-            
+    def _paste_image(self, event: tk.Event):
+        try:
+            image = ImageGrab.grabclipboard()
+        except Exception as e:
+            logger.warning(f"Failed to paste image: {e}")
+            return
+        
+        if not isinstance(image, Image.Image):
+            return
+        
+        image = image.convert("RGBA")
+        size = self.get_image_size_in_bytes(image)
+        if size > ATTACHMENT_MAX_SIZE:
+            logger.warning("File too large")
+            return
+        
+        try:
+            attachment = Attachment(0, "unknown.png", AttachmentType.IMAGE, image.width, image.height, size)
+        except ValueError as e:
+            logger.warning(f"Failed to create attachment: {e}")
+            return
+        
+        if self._attachment_image is not None:
+            self._attachment_image.destroy()
+        
+        stream = BytesIO()
+        image.save(stream, "PNG")
+        self._attachment_blob = stream.getvalue()
+        image.thumbnail(THUMBNAIL_MAX_DIM, Image.Resampling.LANCZOS)
+        self._attachment = attachment
+        self._attachment_image = LoadableImage(self._attachment_frame, image=image, corner_radius=5, client=self._client, max_width=THUMBNAIL_MAX_DIM[0], max_height=THUMBNAIL_MAX_DIM[1])
+        self._attachment_image.grid(row=0, column=0, sticky="nsew")
+        self._attachment_image.load()
+        
+    def _clear_attachment(self, *args):
+        if self._attachment_image is not None:
+            self._attachment_image.destroy()
+            self._attachment_image = None
+        self._attachment = None
+        self._attachment_blob = None
+        
+    @staticmethod  
+    def get_image_size_in_bytes(image: Image.Image):
+        byte_arr = BytesIO()
+        image.save(byte_arr, 'png')
+        return len(byte_arr.getvalue())
             
     def _character_limit(self, d: str, p: str) -> bool:
         """

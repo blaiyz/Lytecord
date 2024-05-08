@@ -1,18 +1,19 @@
 import customtkinter as ctk
 from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame
 from loguru import logger
-from PIL import Image
 
 from src.client.client import Client
 from src.client.ui.channel_box import ChannelBox
 from src.shared.channel import Channel
+from src.client.ui.design import HASHTAG_ICON_DARK, HASHTAG_ICON_LIGHT
 
 
 HEIGHT = 40
 
 class ChannelButton(CTkButton):
     def __init__(self, *args, channel: Channel, channel_box: ChannelBox, client: Client, **kwargs):
-        super().__init__(*args, border_width=3, text="  #"+channel.name, command=self.on_click, font=("", 17), corner_radius=5, height=HEIGHT, anchor="w", border_color="#00478e", **kwargs)
+        icon = ctk.CTkImage(light_image=HASHTAG_ICON_LIGHT, dark_image=HASHTAG_ICON_DARK, size=(20, 20))
+        super().__init__(*args, border_width=3, text=channel.name, command=self.on_click, font=("", 17), corner_radius=5, height=HEIGHT, anchor="w", border_color="#52a9ff", image=icon, border_spacing=5, **kwargs)
 
         self._client = client
         self._channel = channel
