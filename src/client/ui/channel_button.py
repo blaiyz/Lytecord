@@ -1,12 +1,12 @@
 import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame
+from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkLabel,
+                           CTkScrollableFrame)
 from loguru import logger
 
 from src.client.client import Client
 from src.client.ui.channel_box import ChannelBox
-from src.shared.channel import Channel
 from src.client.ui.design import HASHTAG_ICON_DARK, HASHTAG_ICON_LIGHT
-
+from src.shared.channel import Channel
 
 HEIGHT = 40
 

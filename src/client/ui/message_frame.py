@@ -1,7 +1,9 @@
-import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkTextbox
 import tkinter as tk
 from datetime import datetime, timedelta
+
+import customtkinter as ctk
+from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkLabel,
+                           CTkTextbox)
 from loguru import logger
 
 from src.client.client import Client

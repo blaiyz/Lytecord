@@ -1,9 +1,9 @@
 import socket
+from collections.abc import Callable
+
 from loguru import logger
 
 from src.shared import Request
-from collections.abc import Callable
-
 
 HOST = ("localhost", 24827)
 NUMBER_OF_LENGTH_BYTES = 4

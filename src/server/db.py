@@ -1,12 +1,13 @@
-from loguru import logger
-from pymongo import MongoClient
-import gridfs
-from pymongo.collection import Collection
 import random
 import string
 
-from src.shared import AbsDataClass, Channel, ChannelType, Guild, Message, User, Attachment, AttachmentType, attachment
+import gridfs
+from loguru import logger
+from pymongo import MongoClient
+from pymongo.collection import Collection
 
+from src.shared import (AbsDataClass, Attachment, AttachmentType, Channel,
+                        ChannelType, Guild, Message, User, attachment)
 
 db_client = MongoClient("mongodb://localhost:27017/")
 db = db_client["Lytecord"]

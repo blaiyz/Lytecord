@@ -1,11 +1,13 @@
 import base64
-from enum import Enum
-from turtle import width
-from loguru import logger
 from dataclasses import dataclass
-from src.shared.abs_data_class import AbsDataClass, Serializeable
+from enum import Enum
 from io import BytesIO
+from turtle import width
+
+from loguru import logger
 from PIL import Image
+
+from src.shared.abs_data_class import AbsDataClass, Serializeable
 
 MAX_SIZE = 2**24
 MAX_WIDTH = 2**12

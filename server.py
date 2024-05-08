@@ -1,14 +1,17 @@
-import socket, ssl
-from sys import stdout
+import socket
+import ssl
 import threading
-from loguru import logger
-import loguru
+from sys import stdout
 
-from src.shared import loguru_config
-from src.shared.protocol import HOST, RequestWrapper
-from src.shared.channel import Channel, ChannelType
-from src.shared import protocol, Request, RequestType, AbsDataClass, Serializeable
+import loguru
+from loguru import logger
+
 from src.server.client import Client
+from src.shared import (AbsDataClass, Request, RequestType, Serializeable,
+                        loguru_config, protocol)
+from src.shared.channel import Channel, ChannelType
+from src.shared.protocol import HOST, RequestWrapper
+
 
 def main():
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)

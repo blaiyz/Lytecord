@@ -1,12 +1,14 @@
 import threading
+
 from loguru import logger
 
+from src.server import channel_manager
 from src.server.client import Client
 from src.shared.channel import Channel
-from src.server import channel_manager
 from src.shared.message import Message
 from src.shared.protocol import RequestWrapper
 from src.shared.request import Request, RequestType
+
 
 class ChannelSubscription():
     def __init__(self, client: Client, id: int, channel: Channel):

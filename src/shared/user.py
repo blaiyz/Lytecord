@@ -1,9 +1,10 @@
-from PIL import Image
+from dataclasses import dataclass
+
 from customtkinter import CTkImage
 from loguru import logger
-from dataclasses import dataclass
-from src.shared.abs_data_class import AbsDataClass
+from PIL import Image
 
+from src.shared.abs_data_class import AbsDataClass
 
 MAX_NAME_LENGTH = 20
 MIN_NAME_LENGTH = 3

@@ -1,13 +1,14 @@
 import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame, CTkImage
-from PIL import Image
+from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkImage,
+                           CTkLabel, CTkScrollableFrame)
 from loguru import logger
+from PIL import Image
 
 from src.client.client import Client
-from src.shared.guild import Guild
-from src.shared.channel import Channel, ChannelType
 from src.client.ui.channels_frame import ChannelsFrame
-from src.client.ui.design import GUILD_ICON_LIGHT, GUILD_ICON_DARK
+from src.client.ui.design import GUILD_ICON_DARK, GUILD_ICON_LIGHT
+from src.shared.channel import Channel, ChannelType
+from src.shared.guild import Guild
 
 SIZE = 60
 

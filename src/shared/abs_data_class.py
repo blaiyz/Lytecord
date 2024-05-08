@@ -1,11 +1,12 @@
 import json
-from types import NoneType, UnionType
-from loguru import logger
-from dataclasses import dataclass
-from abc import ABC
 import typing
-from typing import Any, Optional, Type, TypeVar, Union
+from abc import ABC
 from collections import ChainMap
+from dataclasses import dataclass
+from types import NoneType, UnionType
+from typing import Any, Optional, Type, TypeVar, Union
+
+from loguru import logger
 
 T = TypeVar("T", bound="Serializeable")
 TAG_LENGTH = 16

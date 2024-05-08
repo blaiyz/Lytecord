@@ -1,12 +1,13 @@
 import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame
+from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkLabel,
+                           CTkScrollableFrame)
 from PIL import Image
 
 from src.client.client import Client
+from src.client.message_manager import MessageManager
 from src.client.ui.channel_box import ChannelBox
 from src.client.ui.channels_frame import ChannelsFrame
 from src.client.ui.guilds_frame import GuildsFrame
-from src.client.message_manager import MessageManager
 
 SIDE_PANEL_FG_COLOR = "#26263b"
 

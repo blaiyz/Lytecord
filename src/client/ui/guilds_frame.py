@@ -1,20 +1,20 @@
 from turtle import window_height
+
 import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame, CTkImage, CTkInputDialog
-from CTkMessagebox import CTkMessagebox
 from ctkcomponents import CTkBanner
-
-
-from PIL import Image
+from CTkMessagebox import CTkMessagebox
+from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkImage,
+                           CTkInputDialog, CTkLabel, CTkScrollableFrame)
 from loguru import logger
-
+from PIL import Image
 
 from src.client.client import Client
 from src.client.ui.channels_frame import ChannelsFrame
-from src.client.ui.guild_button import GuildButton, SIZE
-from src.client.ui.design import JOIN_GUILD_ICON_DARK, JOIN_GUILD_ICON_LIGHT, CREATE_GUILD_ICON_DARK, CREATE_GUILD_ICON_LIGHT
-from src.shared.guild import Guild, MAX_NAME_LENGTH, MIN_NAME_LENGTH
-
+from src.client.ui.design import (CREATE_GUILD_ICON_DARK,
+                                  CREATE_GUILD_ICON_LIGHT,
+                                  JOIN_GUILD_ICON_DARK, JOIN_GUILD_ICON_LIGHT)
+from src.client.ui.guild_button import SIZE, GuildButton
+from src.shared.guild import MAX_NAME_LENGTH, MIN_NAME_LENGTH, Guild
 
 WIDTH = 100
 BG_COLOR = "#1c1c2d"

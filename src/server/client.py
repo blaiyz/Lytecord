@@ -1,10 +1,11 @@
 from __future__ import annotations
-from ssl import SSLSocket
-import threading
-import queue
-from queue import Queue
-from loguru import logger
 
+import queue
+import threading
+from queue import Queue
+from ssl import SSLSocket
+
+from loguru import logger
 
 from src.shared import *
 from src.shared import protocol

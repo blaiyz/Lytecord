@@ -1,14 +1,14 @@
-import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton, CTkFont, CTkScrollableFrame, CTkImage
 import tkinter as tk
+
+import customtkinter as ctk
+from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkImage,
+                           CTkLabel, CTkScrollableFrame)
 from loguru import logger
 
-
 from src.client.client import Client
+from src.client.message_manager import THRESHOLD, MessageManager
 from src.client.ui.text_channel import TextChannel
-from src.client.message_manager import MessageManager, THRESHOLD
 from src.shared.channel import Channel
-
 
 COLOR = ("#ebebeb", "#252525")
 
