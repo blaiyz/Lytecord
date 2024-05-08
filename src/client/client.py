@@ -11,7 +11,7 @@ import base64
 import zlib
 
 from src.shared.attachment import Attachment
-from src.shared.protocol import HOST
+from src.shared.protocol import HOST, CERT
 from src.shared import Request, RequestType, Channel, ChannelType, Guild, Message, login_utils
 from src.client.request_manager import RequestManager
 from src.shared.user import User
@@ -55,8 +55,8 @@ class Client():
         self.ip = ip
         self.port = port
         # Deal with certificate verification later
-        self.context = ssl._create_unverified_context()
-        self.sock = self.context.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), server_hostname=self.ip)
+        self.context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=CERT)
+        self.sock = self.context.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), server_hostname=HOST[0])
 
         self.user: User | None = None
         self.subscription = Subscription(None, None)

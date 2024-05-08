@@ -5,9 +5,10 @@ from src.shared import Request
 from collections.abc import Callable
 
 
-HOST = ("127.0.0.1", 24827)
+HOST = ("localhost", 24827)
 NUMBER_OF_LENGTH_BYTES = 4
 MAX_DATA_LOG_LENGTH = 500
+CERT = "server.crt"
 
 class SocketClosedException(Exception):
     pass
