@@ -72,7 +72,7 @@ class TextChannel(CTkFrame):
         
         self._entry = CTkEntry(self._entry_frame, fg_color="transparent", border_width=0, font=CTkFont(family="Helvetica", size=18), corner_radius=5, validate="key", validatecommand=(self.master.register(self._character_limit), '%d', '%P')) 
         self._entry.bind("<Return>", self._send_message)
-        self._entry.bind("<Control-v>", self._paste_image)
+        self._entry.bind("<Control-v>", self._paste_image, add=True)
         self._entry.bind("<Escape>", self._clear_attachment, add=True)
         
         self._messages_frame.grid(row=0, column=0, sticky="nsew")
@@ -450,6 +450,7 @@ class TextChannel(CTkFrame):
         self._attachment_image.load()
         
     def _paste_image(self, event: tk.Event):
+        logger.debug("Pasting image")
         try:
             image = ImageGrab.grabclipboard()
         except Exception as e:
