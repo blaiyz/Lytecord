@@ -37,8 +37,9 @@ class MessageFrame(CTkFrame):
 
         self.message = message
         self._client = client
-        self._author_name = message.author.username # Fetching name will be implemented later
-        self._author_label = CTkLabel(self, text=self._author_name, font=CTkFont(size=FONT_SIZE+2, weight="bold"))
+        self._author_name = message.author.username
+        self._author_name_color = message.author.name_color
+        self._author_label = CTkLabel(self, text=self._author_name, font=CTkFont(size=FONT_SIZE+2, weight="bold"), text_color=self._author_name_color)
         self._author_label.grid(row=0, column=0, sticky="w", padx=10, pady=1)
 
         time = datetime.fromtimestamp(self.message.timestamp)

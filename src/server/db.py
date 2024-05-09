@@ -3,7 +3,9 @@ import string
 
 import gridfs
 from loguru import logger
+import pymongo
 from pymongo import MongoClient
+import pymongo.collation
 from pymongo.collection import Collection
 
 from src.shared import (AbsDataClass, Attachment, AttachmentType, Channel,
@@ -18,10 +20,19 @@ messages: Collection = db["messages"]
 passwords: Collection = db["passwords"]
 attachments = gridfs.GridFS(db, "attachments")
 
+CASE_INSENSITIVE_COLLATION = pymongo.collation.Collation(locale="en", strength=2)
+
 def convert_id_name(d: dict) -> dict:
     d["id"] = d["_id"]
     del d["_id"]
     return d
+
+
+def create_indexes():
+    messages.create_index("channel_id")
+    users.create_index("username", unique=True, collation=CASE_INSENSITIVE_COLLATION)
+    channels.create_index("guild_id")
+    guilds.create_index("join_code", unique=True)
 
 
 def get_random_hex_code(length=16):
@@ -96,7 +107,7 @@ def get_user(user_id: int) -> User:
     return User.from_db_dict(_get_user_raw(user_id))
 
 def get_user_by_name(username: str) -> User:
-    result = users.find_one({"username": username})
+    result = users.find_one({"username": username}, collation=CASE_INSENSITIVE_COLLATION)
     if result is None:
         raise KeyError(f"User with name {username} does not exist")
     return User.from_db_dict(result)
@@ -105,7 +116,7 @@ def does_user_exist(user_id: int) -> bool:
     return users.find_one({"_id": user_id}) is not None
 
 def does_user_exist_by_name(username: str) -> bool:
-    return users.find_one({"username": username}) is not None
+    return users.find_one({"username": username}, collation=CASE_INSENSITIVE_COLLATION) is not None
 
 def user_join_guild(user_id: int, guild_id: int):
     # Check if the user and guild exist

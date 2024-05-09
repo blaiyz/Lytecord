@@ -21,7 +21,6 @@ def main():
     bindsocket.listen(5)
     
     from src.server import db
-    
     logger.info("Server started")
         
     while True:

@@ -94,7 +94,11 @@ def authenticate(data: dict, client: Client) -> dict:
         if not login_utils.is_valid_password(password):
             return {"status": "error", "message": "Invalid/weak password"}
         
-        user = asset_generator.generate_user(username, login_utils.hash_password(password))
+        name_color = data["name_color"]
+        if not User.is_valid_hex_color(name_color):
+            return {"status": "error", "message": "Bad name color, try a different one"}
+        
+        user = asset_generator.generate_user(username, login_utils.hash_password(password), name_color)
         client.user = user
         return {"status": "success", "message": "Registered", "user": user}
         

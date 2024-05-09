@@ -27,7 +27,7 @@ class MessageManager():
         self._top: bool = False
         
     def set_channel(self, channel: Channel | None, received: Callable | None = None):
-        logger.debug(f"Setting channel to {channel}")
+        logger.debug(f"Setting channel to {channel}, from: {self._channel}")
         if channel == self._channel:
             return
         

@@ -46,8 +46,8 @@ def generate_channel(name: str, channel_type: ChannelType, guild_id: int) -> Cha
     db.channels.insert_one(c.to_db_dict())
     return c
 
-def generate_user(name: str, password_hash: str) -> User:
-    u = User(get_id(), name)
+def generate_user(name: str, password_hash: str, name_color: str) -> User:
+    u = User(get_id(), name, name_color)
     d = u.to_db_dict()
     d["joined_guilds"] = []
     db.users.insert_one(d)

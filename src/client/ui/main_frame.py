@@ -43,19 +43,21 @@ class SidePanel(CTkFrame):
         super().__init__(*args, width=SIDE_PANEL_WIDTH, **kwargs)
 
         self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(1, minsize=300)
 
         self.channel_box = channel_box
         self.client = client
 
-        self.cf = ChannelsFrame(self, channel_box=self.channel_box, client=self.client)
-        self.cf.grid(row=0, column=1, sticky="nsew")
+        self.channels_frame = ChannelsFrame(self, channel_box=self.channel_box, client=self.client, width=200)
+        self.channels_frame.grid(row=0, column=1, sticky="nsew")
 
-        self.gf = GuildsFrame(self, channels_frame=self.cf, client=self.client)
-        self.gf.grid(row=0, column=0, sticky="nsew")
+        self.guilds_frame = GuildsFrame(self, channels_frame=self.channels_frame, client=self.client)
+        self.guilds_frame.grid(row=0, column=0, sticky="nsew")
 
     def load(self):
-        self.gf.load()
+        self.guilds_frame.load()
+        self.channels_frame.update_user()
         
     def unload(self):
-        self.gf.clear_guilds()
-        self.cf.clear_channels()
+        self.guilds_frame.clear_guilds()
+        self.channels_frame.clear_channels()
