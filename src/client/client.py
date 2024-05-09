@@ -68,7 +68,7 @@ class Client():
         self.request_manager.begin()
         
         
-    def authenticate(self, subtype: AuthType, username: str, password: str, callback: Callable[[bool, str], None]):
+    def authenticate(self, subtype: AuthType, username: str, password: str, color: str, callback: Callable[[bool, str], None]):
         @ensure_correct_data(default=(False,), callback=callback)
         def c(req: Request):
             msg = req.data["message"]
@@ -79,8 +79,10 @@ class Client():
                 callback(True, 'Authenticated')
             callback(False, msg)
         
-        
-        request = Request(RequestType.AUTHENTICATE, {"username": username, "password": password, "subtype": subtype.value})
+        d = {"username": username, "password": password, "subtype": subtype.value}
+        if subtype == AuthType.REGISTER:
+            d["name_color"] = color
+        request = Request(RequestType.AUTHENTICATE, d)
         self.request_manager.request(request, callback=c)
         
     def get_guilds(self, callback: Callable[[list[Guild]], None]):

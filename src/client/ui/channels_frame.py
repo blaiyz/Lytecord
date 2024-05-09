@@ -16,6 +16,7 @@ from src.client.ui.design import (CREATE_GUILD_ICON_DARK,
 from src.shared.channel import (MAX_NAME_LENGTH, MIN_NAME_LENGTH, Channel,
                                 ChannelType)
 from src.shared.guild import Guild
+from src.shared.user import User
 
 FG_COLOR = ("#8e8e8e", "#353535")
 
@@ -48,12 +49,18 @@ class ChannelsFrame(CTkFrame):
         self._guild_code_frame.grid(row=3, column=0, sticky="ew", padx=0, pady=(5, 15))
         self._guild_code_frame.grid_remove()
         self._guild_code_frame.grid_columnconfigure(0, weight=1)
+        
         entry_font = CTkFont(weight="bold", size=15, family="Cascadia Code")
         self._guild_code_entry = CTkEntry(self._guild_code_frame, fg_color=FG_COLOR, font=entry_font, state="readonly")
         self._guild_code_entry.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+        
         icon = CTkImage(light_image=REFRESH_ICON_LIGHT, dark_image=REFRESH_ICON_DARK, size=(20, 20))
         self._guild_code_button = CTkButton(self._guild_code_frame, text="", image=icon, corner_radius=5, fg_color=FG_COLOR, hover_color="#727272", command=self.refresh_guild_code, width=20, height=20)
         self._guild_code_button.grid(row=0, column=1, sticky="ew", padx=5, pady=5)
+        
+        self._username_label = CTkLabel(self, text="Username", font=CTkFont(size=17, weight='bold'), fg_color=FG_COLOR, text_color="white", corner_radius=5)
+        self._username_label.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
+        self._username_label.grid_remove()
 
         
 
@@ -217,3 +224,27 @@ class ChannelsFrame(CTkFrame):
         
     def unload(self):
         self.clear_channels()
+        
+    def update_user(self):
+        user = self.client.user
+        if user is None:
+            self._username_label.grid_remove()
+            return
+        
+        name_color = user.name_color
+        brightness = User.color_distance(name_color, "#000000")
+        
+        if brightness < 32:
+            amount = 100
+        elif brightness < 64:
+            amount = 75
+        elif brightness < 128:
+            amount = 50
+        elif brightness < 192:
+            amount = -75
+        else:
+            amount = -100
+        
+        text_color = User.adjust_brightness(name_color, amount)
+        self._username_label.configure(text=user.username, fg_color=name_color, text_color=text_color)
+        self._username_label.grid()

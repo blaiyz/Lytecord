@@ -25,8 +25,8 @@ customtkinter.set_appearance_mode("system")
 
 MIN_WIDTH = 0
 MIN_HEIGHT = 0
-START_WIDTH = 600
-START_HEIGHT = 600
+START_WIDTH = 1000
+START_HEIGHT = 1000
 
 
 class App(customtkinter.CTk):
@@ -61,7 +61,7 @@ class App(customtkinter.CTk):
 
         self.bind("<Button-1>", self.click_event, add="+")
 
-    def authenticate(self, subtype: AuthType, username: str, password: str, callback: Callable[[bool, str], None]):
+    def authenticate(self, subtype: AuthType, username: str, password: str, color: str, callback: Callable[[bool, str], None]):
         if self.app_state == AppState.LOGGING_IN:
             callback(False, "Already Logging in")
 
@@ -86,8 +86,11 @@ class App(customtkinter.CTk):
             else:
                 callback(False, "Invalid credentials")
             return
+        if subtype == AuthType.REGISTER and not login_utils.is_valid_color(color):
+            callback(False, "Bad name color, try a different one")
+            return
             
-        self.client.authenticate(subtype, username, password, c)
+        self.client.authenticate(subtype, username, password, color, c)
 
     
     def switch_frame(self):
