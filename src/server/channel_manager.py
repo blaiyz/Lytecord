@@ -7,7 +7,7 @@ from src.server.channel_subscription import ChannelSubscription
 from src.shared.channel import Channel
 from src.shared.message import Message
 
-BUFFER_SIZE = 100
+BUFFER_SIZE = 30
 
 class ServerChannel:
     def __init__(self, channel: Channel):
@@ -32,7 +32,7 @@ class ServerChannel:
     def broadcast(self, message: Message, sender: ChannelSubscription):
         logger.debug(f"Broadcasting message {message} to channel {self.channel}")
         with self._lock:
-            logger.debug(f"Buffer: {self._buffer}")
+            #logger.debug(f"Buffer: {self._buffer}")
             if message in self._buffer:
                 return
             
@@ -59,7 +59,7 @@ class ServerChannel:
                 return []
             
             index = bisect.bisect_left(self._buffer, -after, key=lambda x: x.sort_key())
-            logger.debug(f"Index: {index}, buffer: {self._buffer}")
+            #logger.debug(f"Index: {index}, buffer: {self._buffer}")
             return self._buffer[:index]
             
         

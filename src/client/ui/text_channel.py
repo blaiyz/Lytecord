@@ -120,6 +120,7 @@ class TextChannel(CTkFrame):
         self._message_list.clear()
 
         if self._channel is None:
+            self._mm.set_channel(None)
             self._loading = False
             return True
         

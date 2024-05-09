@@ -48,7 +48,7 @@ class ChannelsFrame(CTkFrame):
         self._guild_code_frame.grid(row=3, column=0, sticky="ew", padx=0, pady=(5, 15))
         self._guild_code_frame.grid_remove()
         self._guild_code_frame.grid_columnconfigure(0, weight=1)
-        entry_font = CTkFont(weight="bold", size=15)
+        entry_font = CTkFont(weight="bold", size=15, family="Cascadia Code")
         self._guild_code_entry = CTkEntry(self._guild_code_frame, fg_color=FG_COLOR, font=entry_font, state="readonly")
         self._guild_code_entry.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
         icon = CTkImage(light_image=REFRESH_ICON_LIGHT, dark_image=REFRESH_ICON_DARK, size=(20, 20))
