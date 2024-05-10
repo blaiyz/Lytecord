@@ -33,6 +33,7 @@ def create_indexes():
     users.create_index("username", unique=True, collation=CASE_INSENSITIVE_COLLATION)
     channels.create_index("guild_id")
     guilds.create_index("join_code", unique=True)
+    logger.warning("Please manually create attachment hash index")
 
 
 def get_random_hex_code(length=16):
@@ -64,6 +65,7 @@ def get_guild_join_code(guild_id: int) -> str:
 def refresh_guild_join_code(guild_id: int) -> str:
     join_code = get_random_hex_code()
     
+    # Make sure the join code is unique
     while guilds.find_one({"join_code": join_code}) is not None:
         join_code = get_random_hex_code()
         
@@ -145,7 +147,7 @@ def get_password_hash(user_id: int) -> str:
 def _map_db_message(m: dict):
     """
     Converts a message from the database to a Message object
-    by replacing the author_id with the author object
+    by replacing the author_id and attachment_id with the corresponding objects
     """
     author = get_user(m["author_id"])
     m["author"] = author
@@ -193,3 +195,10 @@ def get_attachment(attachment_id: int) -> Attachment:
     height: int = attachment.height
     size = attachment.length
     return Attachment(attachment_id, filename, AttachmentType(attachment_type), width, height, size)
+
+def find_attachment_by_hash(hash: str) -> Attachment | None:
+    attachment = attachments.find_one({"hash": hash})
+    if attachment is None:
+        return None
+    id = attachment._id
+    return get_attachment(id)

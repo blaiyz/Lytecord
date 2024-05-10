@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+from hashlib import md5
 from io import BytesIO
 from threading import Lock
 
@@ -97,8 +98,14 @@ def generate_attachment(data: bytes, attachment_type: AttachmentType, name: str)
     elif height > attachment.MAX_HEIGHT:
         raise ValueError(f"Height is too large ({height} > {attachment.MAX_HEIGHT})")
         
+    # Check if the attachment already exists
+    hash = md5(data).hexdigest()
+    a = db.find_attachment_by_hash(hash)
+    if a is not None:        
+        return a
+    
     id = get_id()
     a = Attachment(id, name, attachment_type, width, height, len(data))
-    db.attachments.put(data, _id=id, filename=name, attachment_type=attachment_type.value, width=width, height=height)
+    db.attachments.put(data, _id=id, filename=name, attachment_type=attachment_type.value, width=width, height=height, hash=hash)
     
     return a
