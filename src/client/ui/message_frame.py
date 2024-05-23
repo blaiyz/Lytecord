@@ -7,7 +7,7 @@ from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkLabel,
 from loguru import logger
 
 from src.client.client import Client
-from src.client.ui.loadable_message import LoadableImage
+from src.client.ui.loadable_image import LoadableImage
 from src.shared.message import Message
 
 FONT_SIZE = 14

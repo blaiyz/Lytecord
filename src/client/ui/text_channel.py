@@ -13,7 +13,7 @@ from PIL import Image, ImageGrab
 from src.client.client import Client
 from src.client.message_manager import THRESHOLD, MessageManager
 from src.client.ui.design import ATTACHMENT_ICON_DARK, ATTACHMENT_ICON_LIGHT
-from src.client.ui.loadable_message import LoadableImage
+from src.client.ui.loadable_image import LoadableImage
 from src.client.ui.message_frame import MessageFrame
 from src.shared.attachment import MAX_SIZE as ATTACHMENT_MAX_SIZE
 from src.shared.attachment import Attachment, AttachmentType
