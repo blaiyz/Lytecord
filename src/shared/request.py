@@ -11,7 +11,7 @@ from src.shared.abs_data_class import AbsDataClass, Encoder, Serializeable
 
 class RequestType(enum.Enum):
     AUTHENTICATE = "Authenticate"
-    REGISTER  = "Register"
+    REGISTER = "Register"
     UNAUTHORIZED = "Unauthorized"
     ERROR = "Error"
     SEND_MESSAGE = "SendMessage"
@@ -27,24 +27,22 @@ class RequestType(enum.Enum):
     JOIN_GUILD = "JoinGuild"
     GET_ATTACHMENT_FILE = "GetAttachmentFile"
     UPLOAD_ATTACHMENT = "UploadAttachment"
-    
+
 
 class Request():
-    def __init__(self, request_type: RequestType, data: dict | Serializeable, callback: Callable[[Request], None] | None = None):
+    def __init__(self, request_type: RequestType, data: dict | Serializeable,
+                 callback: Callable[[Request], None] | None = None):
         self.request_type = request_type
         self.data = data if isinstance(data, dict) else data.to_json_serializeable()
-        
-        
-    
+
     def __str__(self):
         return f"Request({self.request_type}, {self.data})"
-    
+
     def serialize(self):
         return f"{str(self.request_type.value)}\n{json.dumps(self.data, cls=Encoder, separators=(',', ':'))}"
-        
 
     @staticmethod
-    def deserialize(string: str)-> "Request":
+    def deserialize(string: str) -> "Request":
         request_type, data = string.split("\n", maxsplit=1)
         data = json.loads(data)
         if isinstance(data, dict):

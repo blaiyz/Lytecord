@@ -9,9 +9,9 @@ from PIL import Image
 
 from src.shared.abs_data_class import AbsDataClass, Serializeable
 
-MAX_SIZE = 2**24
-MAX_WIDTH = 2**12
-MAX_HEIGHT = 2**12
+MAX_SIZE = 2 ** 24
+MAX_WIDTH = 2 ** 12
+MAX_HEIGHT = 2 ** 12
 
 
 class AttachmentType(Serializeable, Enum):
@@ -20,14 +20,14 @@ class AttachmentType(Serializeable, Enum):
 
     def __str__(self):
         return self.name.lower()
-    
+
     def to_json_serializeable(self):
         return self.name.lower()
-    
+
     @classmethod
     def deserialize(cls, string: str):
         return cls[string.upper()]
-    
+
 
 @dataclass(frozen=True)
 class Attachment(AbsDataClass):
@@ -40,16 +40,17 @@ class Attachment(AbsDataClass):
     def __post_init__(self):
         super().__post_init__()
         if len(self.filename) > 100 or len(self.filename) < 3:
-            logger.error(f"Name ({self.filename}) cannot be more than 100 characters long or less than 3 characters long")
+            logger.error(
+                f"Name ({self.filename}) cannot be more than 100 characters long or less than 3 characters long")
             raise ValueError("Name cannot be more than 100 characters long or less than 3 characters long")
-        
+
         if self.size <= 0:
             logger.error(f"Attachment size ({self.size}) cannot be less than or equal to 0")
             raise ValueError("Attachment size cannot be less than or equal to 0")
         if self.size > MAX_SIZE:
             logger.error(f"Attachment size ({self.size}) cannot be more than {MAX_SIZE}")
             raise ValueError(f"Attachment size cannot be more than {MAX_SIZE}")
-        
+
         if self.a_type == AttachmentType.IMAGE:
             if self.width <= 0:
                 logger.error(f"Width ({self.width}) cannot be less than or equal to 0")
@@ -75,7 +76,7 @@ class Attachment(AbsDataClass):
         if with_blob:
             return super().__str__()
         return f"Attachment(id: {self.id}, name: {self.filename}, type: {self.a_type}, {self.width}, {self.height})"
-    
+
     @staticmethod
     def is_valid_image(blob: bytes) -> Image.Image | None:
         try:

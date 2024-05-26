@@ -15,7 +15,7 @@ from src.shared.request import Request, RequestType
 
 # The maximum number of requests that can be sent at once
 # Should be enough (after all you don't send 1000 requests at once)
-MAX_ID = 2**10
+MAX_ID = 2 ** 10
 
 
 class RequestManager():
@@ -29,7 +29,7 @@ class RequestManager():
         self._sender = Thread(target=self._run_sender, daemon=True)
         self._sender_condition = threading.Condition()
         self._send_lock = threading.Lock()
-        
+
         # incoming
         # normal means one time requests, while subscribed requests
         # persist until the client unsubscribes (useful for things like
@@ -40,13 +40,12 @@ class RequestManager():
         self._subscribed_lock = threading.Lock()
         self._receiver = Thread(target=self._run_receiver, daemon=True)
 
-
     def begin(self):
         if not self._continue:
             self._continue = True
             self._sender.start()
             self._receiver.start()
-        
+
     def stop(self):
         if self._continue:
             self._continue = False
@@ -54,7 +53,7 @@ class RequestManager():
                 self._sender_condition.notify()
             self._sender.join()
             self._receiver.join()
-        
+
     def _run_sender(self):
         with self._sender_condition:
             while self._continue:
@@ -70,8 +69,7 @@ class RequestManager():
                     with self._normal_lock:
                         self._normal_requests[id] = req
                 protocol.send(req, self._sock)
-            
-            
+
     def _run_receiver(self):
         while self._continue:
             try:
@@ -86,21 +84,23 @@ class RequestManager():
                         if not wrapped:
                             continue
                         if error:
-                            logger.warning(f"From subscribed request: {wrapped.request.request_type} {wrapped.request.data}")
+                            logger.warning(
+                                f"From subscribed request: {wrapped.request.request_type} {wrapped.request.data}")
                             continue
-                        
+
                         if wrapped.callback:
                             self._app.after_idle(wrapped.callback, req)
-                        
+
                 else:
                     with self._normal_lock:
                         wrapped = self._normal_requests.pop(id, None)
                         if not wrapped:
                             continue
                         if error:
-                            logger.warning(f"From regular request: {wrapped.request.request_type} {wrapped.request.data}")
+                            logger.warning(
+                                f"From regular request: {wrapped.request.request_type} {wrapped.request.data}")
                             continue
-                            
+
                         if wrapped.callback:
                             self._app.after_idle(wrapped.callback, req)
             except SocketClosedException:
@@ -109,7 +109,7 @@ class RequestManager():
             except Exception as e:
                 logger.exception(f"Caught exception in receiver: {e}")
                 break
-            
+
     def request(self, req: Request, callback: Callable[[Request], None]):
         """
         Send a request to the server. The callback will be called when a response
@@ -121,7 +121,7 @@ class RequestManager():
             with self._sender_condition:
                 self._requests.put(wrapped)
                 self._sender_condition.notify()
-        
+
     def subscribe(self, req: Request, callback: Callable[[Request], None]) -> int:
         """
         Subscribe to a request. This means that the callback will be called
@@ -138,7 +138,7 @@ class RequestManager():
                 self._requests.put(wrapped)
                 self._sender_condition.notify()
         return wrapped.id
-        
+
     def unsubscribe(self, id: int, request: Request):
         """
         Unsubscribe from a request, using the id returned from subscribe.
@@ -148,6 +148,8 @@ class RequestManager():
         with self._send_lock:
             with self._subscribed_lock:
                 self._subscribed_requests.pop(id, None)
+
         def callback(req: Request):
             pass
+
         self.request(request, callback)

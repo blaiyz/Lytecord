@@ -7,7 +7,8 @@ from src.shared.attachment import Attachment
 from src.shared.user import User
 
 MAX_MESSAGE_LENGTH = 1500
-TAG_BYTE_LENGTH  = TAG_LENGTH
+TAG_BYTE_LENGTH = TAG_LENGTH
+
 
 @dataclass(frozen=True)
 class Message(AbsDataClass):
@@ -33,8 +34,10 @@ class Message(AbsDataClass):
             logger.error(f"Timestamp ({self.timestamp}) cannot be less than or equal to 0")
             raise ValueError("Timestamp cannot be less than or equal to 0")
         if self.timestamp != self.id >> TAG_BYTE_LENGTH:
-            logger.error(f"Timestamp ({self.timestamp}) must be equal to the upper bits of ID ({self.id}) (the first {TAG_BYTE_LENGTH} bits are the tag)")
-            raise ValueError(f"Timestamp must be equal to the upper bits of ID (the first {TAG_BYTE_LENGTH} bits are the tag)")
-    
+            logger.error(
+                f"Timestamp ({self.timestamp}) must be equal to the upper bits of ID ({self.id}) (the first {TAG_BYTE_LENGTH} bits are the tag)")
+            raise ValueError(
+                f"Timestamp must be equal to the upper bits of ID (the first {TAG_BYTE_LENGTH} bits are the tag)")
+
     def sort_key(self):
         return -self.id

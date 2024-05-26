@@ -14,10 +14,10 @@ SIDE_PANEL_FG_COLOR = "#26263b"
 SIDE_PANEL_WIDTH = 300
 GUILD_ICON_SIZE = 50
 
+
 class MainFrame(CTkFrame):
     def __init__(self, *args, client: Client, **kwargs):
         super().__init__(*args, fg_color="transparent", **kwargs)
-
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(1, weight=1)
@@ -28,12 +28,13 @@ class MainFrame(CTkFrame):
         self.cb = ChannelBox(self, message_manager=self.mm, client=client)
         self.cb.grid(row=1, column=1, sticky="nsew", padx=0, pady=0)
 
-        self.side_panel = SidePanel(self, corner_radius=0, fg_color=SIDE_PANEL_FG_COLOR, channel_box=self.cb, client=client)
+        self.side_panel = SidePanel(self, corner_radius=0, fg_color=SIDE_PANEL_FG_COLOR, channel_box=self.cb,
+                                    client=client)
         self.side_panel.grid(row=1, column=0, sticky="nsew")
-        
+
     def load(self):
         self.side_panel.load()
-        
+
     def unload(self):
         self.side_panel.unload()
 
@@ -57,7 +58,7 @@ class SidePanel(CTkFrame):
     def load(self):
         self.guilds_frame.load()
         self.channels_frame.update_user()
-        
+
     def unload(self):
         self.guilds_frame.clear_guilds()
         self.channels_frame.clear_channels()

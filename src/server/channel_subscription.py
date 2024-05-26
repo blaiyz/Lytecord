@@ -31,7 +31,6 @@ class ChannelSubscription():
             self._startup_event.wait()
             self.server_channel = channel_manager.subscribe(self)
 
-            
     def stop(self):
         with self._condition:
             self._stop = True
@@ -42,7 +41,7 @@ class ChannelSubscription():
             self._condition.notify()
             logger.debug('notified')
         self._thread.join()
-        
+
     def _run(self):
         with self._condition:
             self._startup_event.set()
@@ -52,33 +51,32 @@ class ChannelSubscription():
                 logger.debug(f"woke up {self._id}, {self._stop}")
                 if self._stop:
                     break
-                
+
                 if not self.server_channel:
                     continue
-                
+
                 messages = self.server_channel.get_messages(self._last_message_id)
                 if len(messages) == 0:
                     continue
-                
+
                 for message in messages[::-1]:
                     self.client.add_response(self.create_response(message))
                 self._last_message_id = messages[0].id if len(messages) > 0 else self._last_message_id
-                    
+
     def create_response(self, message: Message) -> RequestWrapper:
         request = Request(RequestType.CHANNEL_SUBSCRIPTION, {"message": message})
         wrapped = RequestWrapper(request, self._id, None, True)
         return wrapped
-        
-                    
+
     def wake_up(self):
         with self._condition:
             self._condition.notify()
-            
+
     def send_message(self, message: Message):
         if not self.server_channel:
             logger.warning("Tried to send message to None channel, please set channel first")
             return False
-        
+
         self._last_message_id = message.id
         self.server_channel.broadcast(message, self)
         return True

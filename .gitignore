@@ -1,6 +1,8 @@
 .vscode/
+.idea/
 .VSCodeCounter/
 examples/
+.pylintrc
 
 server.crt
 server.csr
