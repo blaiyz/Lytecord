@@ -3,6 +3,7 @@
 .VSCodeCounter/
 examples/
 .pylintrc
+*.puml
 
 server.crt
 server.csr
