@@ -22,11 +22,13 @@ Functions:
 import base64
 import functools
 import zlib
+import py2puml
 
 from loguru import logger
 from pymongo.errors import PyMongoError
 
 from src.server import asset_generator, db
+from src.server import channel_manager
 from src.server.channel_subscription import ChannelSubscription
 from src.server.client import Client
 from src.shared import Request, RequestType, User, Channel, ChannelType, Attachment, AttachmentType
@@ -35,7 +37,7 @@ from src.shared import login_utils
 MAX_LOG_SIZE = 2000
 
 
-def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Request:
+def handle_request(req: Request, request_id: int, subbed: bool, client: Client) -> Request:
     req_type = req.request_type
 
     match req_type:
@@ -48,7 +50,7 @@ def handle_request(req: Request, id: int, subbed: bool, client: Client) -> Reque
         case RequestType.GET_MESSAGES if not subbed:
             res_data = get_messages(req.data, client)
         case RequestType.CHANNEL_SUBSCRIPTION if subbed:
-            res_data = channel_sub_handler(req.data, client, id)
+            res_data = channel_sub_handler(req.data, client, request_id)
         case RequestType.CHANNEL_SUBSCRIPTION if not subbed:
             res_data = channel_unsub_handler(req.data, client)
         case RequestType.SEND_MESSAGE if not subbed:
@@ -188,7 +190,7 @@ def channel_sub_handler(data: dict, client: Client, subscription_id: int) -> dic
 
         subscription = ChannelSubscription(client, subscription_id, channel)
         client.current_channel = subscription
-        subscription.begin(last_message_id)
+        channel_manager.subscribe(subscription, last_message_id)
 
         # For missed messages (if any)
         subscription.wake_up()
@@ -204,7 +206,7 @@ def channel_unsub_handler(data: dict, client: Client) -> dict:
         if subscription is None:
             return {"status": "error", "message": "Not subscribed"}
 
-        subscription.stop()
+        channel_manager.unsubscribe(subscription)
         client.current_channel = None
         return {"status": "success", "message": "Unsubscribed"}
     return {"status": "error", "message": "Invalid subtype (use sub=true to subscribe)"}
@@ -241,7 +243,7 @@ def create_guild(data: dict, client: Client) -> dict:
 
     try:
         guild = asset_generator.generate_guild(name, client.user.id)
-    except ValueError as e:
+    except ValueError as _:
         return {"status": "error", "message": "Could not create guild"}
 
     return {"status": "success", "guild": guild}
@@ -263,7 +265,7 @@ def create_channel(data: dict, client: Client) -> dict:
 
     try:
         channel = asset_generator.generate_channel(name, ChannelType.TEXT, guild_id)
-    except ValueError as e:
+    except ValueError as _:
         return {"status": "error", "message": "Could not create channel"}
 
     return {"status": "success", "channel": channel}

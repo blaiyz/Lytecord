@@ -9,6 +9,7 @@ from loguru import logger
 from src.shared import Request, RequestType, User
 from src.shared import protocol
 from src.shared.protocol import RequestWrapper
+from src.server import channel_subscription 
 
 
 class Client():
@@ -26,16 +27,13 @@ class Client():
     """
 
     def __init__(self, socket: SSLSocket):
-        self._socket = socket
-        self.name = socket.getpeername()
+        self._socket: SSLSocket = socket
+        self.name: str = socket.getpeername()
         self.user: User | None = None
         self._response_queue: Queue[RequestWrapper] = Queue()
-        self._condition = threading.Condition()
-        self._stop = False
-
-        # Circular import fix
-        from src.server import channel_manager
-        self.current_channel: channel_manager.ChannelSubscription | None = None
+        self._condition: threading.Condition = threading.Condition()
+        self._stop: bool = False
+        self.current_channel: channel_subscription.ChannelSubscription | None = None
 
     def _receiver_thread(self):
         while not self._stop:

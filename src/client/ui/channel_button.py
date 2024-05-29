@@ -1,6 +1,5 @@
 import customtkinter as ctk
-from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkLabel,
-                           CTkScrollableFrame)
+from customtkinter import CTkButton
 from loguru import logger
 
 from src.client.client import Client

@@ -1,13 +1,9 @@
 import os
-import tkinter as tk
-from datetime import datetime
 from io import BytesIO
 from tkinter import filedialog
 from typing import Callable
 
-import customtkinter as ctk
-from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkImage,
-                           CTkLabel, CTkProgressBar, CTkTextbox)
+from customtkinter import (CTkButton, CTkFrame, CTkImage, CTkLabel, CTkProgressBar)
 from loguru import logger
 from PIL import Image, ImageDraw
 from PIL.Image import Image as ImageType

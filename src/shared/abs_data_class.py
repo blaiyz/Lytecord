@@ -119,7 +119,7 @@ class AbsDataClass(ABC, Serializeable):
             logger.error(f"ID ({self.id}) cannot be less than 0")
             raise ValueError("ID cannot be less than 0")
 
-    def to_db_dict(self):
+    def to_db_dict(self) -> dict[str, Any]:
         """
         Returns a dictionary with the data of the class, with the id renamed to _id.
         Supports nested data classes, as long as they inherit from Serializeable.

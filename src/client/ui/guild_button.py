@@ -26,10 +26,10 @@ class GuildButton(CTkButton):
         icon = CTkImage(light_image=GUILD_ICON_LIGHT, dark_image=GUILD_ICON_DARK, size=(SIZE, SIZE))
         super().__init__(*args, text="", corner_radius=15, width=SIZE + 10, height=SIZE + 10, border_spacing=0,
                          command=self.on_click, image=icon, fg_color=COLOR, hover_color=HOVER_COLOR, **kwargs)
-        self.client = client
-        self._guild = guild
-        self._channels_frame = cf
-        self._fetching = False
+        self.client: Client = client
+        self._guild: Guild = guild
+        self._channels_frame: ChannelsFrame = cf
+        self._fetching: bool = False
 
         # TODO: implement icon, implement font resize for when no icon is present
 

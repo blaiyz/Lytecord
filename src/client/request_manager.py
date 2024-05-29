@@ -19,8 +19,8 @@ MAX_ID = 2 ** 10
 
 
 class RequestManager():
-    def __init__(self, socket: ssl.SSLSocket, app: CTk):
-        self._sock = socket
+    def __init__(self, sock: socket.socket, app: CTk):
+        self._sock = sock
         self._app = app
         self._continue = False
         # outgoing

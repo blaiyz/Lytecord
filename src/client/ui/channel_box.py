@@ -1,12 +1,8 @@
-import tkinter as tk
-
-import customtkinter as ctk
-from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkImage,
-                           CTkLabel, CTkScrollableFrame)
+from customtkinter import (CTkFont, CTkFrame, CTkLabel)
 from loguru import logger
 
 from src.client.client import Client
-from src.client.message_manager import THRESHOLD, MessageManager
+from src.client.message_manager import MessageManager
 from src.client.ui.text_channel import TextChannel
 from src.shared.channel import Channel
 
@@ -26,7 +22,7 @@ class ChannelBox(CTkFrame):
         self._channel: Channel | None = None
         self._client = client
 
-        self._text_channel = TextChannel(self, message_manager=message_manager, client=client)
+        self._text_channel: TextChannel = TextChannel(self, message_manager=message_manager, client=client)
         self._text_channel.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
 
         # Empty channel frame

@@ -35,7 +35,7 @@ class ChannelsFrame(CTkFrame):
         self.grid_rowconfigure(1, weight=1)
 
         font = CTkFont(size=20)
-        self._scroll_frame = CTkScrollableFrame(self, fg_color="transparent", scrollbar_fg_color="transparent",
+        self._scroll_frame = CTkScrollableFrame(self, fg_color="transparent",   scrollbar_button_color="#30304a",
                                                 label_fg_color=FG_COLOR, label_font=font)
         self._scroll_frame.grid_columnconfigure(0, weight=1)
         self._scroll_frame.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)

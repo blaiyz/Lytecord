@@ -55,20 +55,18 @@ class AuthType(Enum):
 
 
 class Client():
-    def __init__(self, ip: str, port: int):
+    def __init__(self, ip: str, port: int, app: CTk):
         self.ip = ip
         self.port = port
         # Deal with certificate verification later
         self.context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=CERT)
-        self.sock = self.context.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), server_hostname=HOST[0])
-
-        self.user: User | None = None
-        self.subscription = Subscription(None, None)
-
-    def begin(self, app: CTk):
+        self.sock: ssl.SSLSocket = self.context.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), server_hostname=HOST[0])
         self.sock.connect((self.ip, self.port))
         self.sock.setblocking(True)
-        self.request_manager = RequestManager(self.sock, app)
+        
+        self.user: User | None = None
+        self.subscription: Subscription = Subscription(None, None)
+        self.request_manager: RequestManager = RequestManager(self.sock, app)
         self.request_manager.begin()
 
     def authenticate(self, subtype: AuthType, username: str, password: str, color: str,

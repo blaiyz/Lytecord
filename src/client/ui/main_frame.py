@@ -22,13 +22,13 @@ class MainFrame(CTkFrame):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
-        self.client = client
+        self.client: Client = client
 
-        self.mm = MessageManager(client=client)
-        self.cb = ChannelBox(self, message_manager=self.mm, client=client)
-        self.cb.grid(row=1, column=1, sticky="nsew", padx=0, pady=0)
+        self.message_manager: MessageManager = MessageManager(client=client)
+        self.channel_box: ChannelBox = ChannelBox(self, message_manager=self.message_manager, client=client)
+        self.channel_box.grid(row=1, column=1, sticky="nsew", padx=0, pady=0)
 
-        self.side_panel = SidePanel(self, corner_radius=0, fg_color=SIDE_PANEL_FG_COLOR, channel_box=self.cb,
+        self.side_panel: SidePanel = SidePanel(self, corner_radius=0, fg_color=SIDE_PANEL_FG_COLOR, channel_box=self.channel_box,
                                     client=client)
         self.side_panel.grid(row=1, column=0, sticky="nsew")
 
@@ -49,10 +49,10 @@ class SidePanel(CTkFrame):
         self.channel_box = channel_box
         self.client = client
 
-        self.channels_frame = ChannelsFrame(self, channel_box=self.channel_box, client=self.client, width=200)
+        self.channels_frame: ChannelsFrame = ChannelsFrame(self, channel_box=self.channel_box, client=self.client, width=200)
         self.channels_frame.grid(row=0, column=1, sticky="nsew")
 
-        self.guilds_frame = GuildsFrame(self, channels_frame=self.channels_frame, client=self.client)
+        self.guilds_frame: GuildsFrame = GuildsFrame(self, channels_frame=self.channels_frame, client=self.client)
         self.guilds_frame.grid(row=0, column=0, sticky="nsew")
 
     def load(self):

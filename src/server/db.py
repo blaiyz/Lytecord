@@ -187,9 +187,7 @@ def get_messages(channel_id: int, from_id: int, count: int) -> list[Message]:
     """
     if from_id != 0:
         return [_map_db_message(m) for m in
-                messages.find({"channel_id": channel_id, "_id": {"$lt": from_id}}).limit(count).sort("_id",
-                                                                                                     -1).max_await_time_ms(
-                    1000)]
+                messages.find({"channel_id": channel_id, "_id": {"$lt": from_id}}).limit(count).sort("_id",-1).max_await_time_ms(1000)]
     return [_map_db_message(m) for m in
             messages.find({"channel_id": channel_id}).limit(count).sort("_id", -1).max_await_time_ms(1000)]
 

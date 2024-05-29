@@ -1,5 +1,3 @@
-from turtle import window_height
-
 import customtkinter as ctk
 from ctkcomponents import CTkBanner
 from CTkMessagebox import CTkMessagebox
@@ -33,7 +31,7 @@ class GuildsFrame(CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
         self._scroll_frame = CTkScrollableFrame(self, width=WIDTH, fg_color="transparent",
-                                                scrollbar_fg_color="transparent")
+                                                scrollbar_button_color="#24243a")
         self._scroll_frame.grid_columnconfigure(0, weight=1)
         self._scroll_frame.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
 

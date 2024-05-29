@@ -5,7 +5,6 @@ import io
 import json
 from collections.abc import Callable
 
-import src.shared.request as request
 from src.shared.abs_data_class import AbsDataClass, Encoder, Serializeable
 
 
@@ -33,7 +32,7 @@ class Request():
     def __init__(self, request_type: RequestType, data: dict | Serializeable,
                  callback: Callable[[Request], None] | None = None):
         self.request_type = request_type
-        self.data = data if isinstance(data, dict) else data.to_json_serializeable()
+        self.data: dict = data if isinstance(data, dict) else data.to_json_serializeable()
 
     def __str__(self):
         return f"Request({self.request_type}, {self.data})"

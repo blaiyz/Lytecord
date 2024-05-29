@@ -3,7 +3,7 @@ import tkinter as tk
 from collections.abc import Callable
 
 import customtkinter as ctk
-from customtkinter import CTkButton, CTkEntry, CTkFont, CTkFrame, CTkLabel
+from customtkinter import CTkButton, CTkEntry, CTkFont, CTkFrame, CTkLabel, CTkScrollableFrame, ThemeManager
 from CTkColorPicker import CTkColorPicker
 
 from src.client.client import AuthType
@@ -27,12 +27,13 @@ class LoginFrame(ctk.CTkFrame):
         # # load and create background image
         # current_path = os.path.dirname(os.path.realpath(__file__))
         # self.bg_image = ctk.CTkImage(im.open(current_path.replace("src\\client", "assets") + "\\login_screen_bg.jpg"))
-        # self.canvas_widget = tk.Canvas(self) 
+        # self.canvas_widget = tk.Canvas(self)
         # self.bg_image_label = ctk.CTkLabel(self, image=self.bg_image)
         # self.bg_image_label.grid(row=0, rowspan=3, column=0)
 
         # create login frame
-        self.login_frame = CTkFrame(self, corner_radius=0, width=400)
+        self.login_frame = CTkScrollableFrame(self, corner_radius=0, width=400, scrollbar_button_color=ThemeManager.theme["CTkFrame"]["fg_color"])
+        self.login_frame._parent_canvas.configure(yscrollincrement=3)
         self.login_frame.grid(row=0, column=1, sticky="nsew", padx=100)
         self.login_frame.grid_columnconfigure((0, 2), weight=1)
         self.login_frame.grid_columnconfigure(1, )
@@ -92,7 +93,7 @@ class LoginFrame(ctk.CTkFrame):
         # create switch auth mode label
         self.switch_auth_mode_label = ctk.CTkLabel(self.login_frame, text="Don't have an account?",
                                                    font=ctk.CTkFont(size=18, weight="bold"), anchor="center")
-        self.switch_auth_mode_label.grid(row=LOWER_ROW_GRID, column=1, padx=40, pady=(40, 0), sticky="sew")
+        self.switch_auth_mode_label.grid(row=LOWER_ROW_GRID, column=1, padx=40, pady=(80, 0), sticky="sew")
 
         # create signup button
         self.switch_auth_mode_button = ctk.CTkButton(self.login_frame, text="Signup",
