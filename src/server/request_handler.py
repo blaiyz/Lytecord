@@ -174,6 +174,9 @@ def get_messages(data: dict, client: Client) -> dict:
 
 @ensure_correct_data
 def channel_sub_handler(data: dict, client: Client, subscription_id: int) -> dict:
+    """
+    Handles channel subscription requests
+    """
     subscription = client.current_channel
     subtype: str = data["subtype"]
 
@@ -188,14 +191,16 @@ def channel_sub_handler(data: dict, client: Client, subscription_id: int) -> dic
         except KeyError:
             return {"status": "error", "message": "Invalid channel id"}
 
+        # Create a new subscription
         subscription = ChannelSubscription(client, subscription_id, channel)
         client.current_channel = subscription
+        # Add the subscription to the channel manager
         channel_manager.subscribe(subscription, last_message_id)
 
         # For missed messages (if any)
         subscription.wake_up()
         return {"status": "success", "message": f"Subscribed to channel {channel.name} with id: {channel.id}"}
-    return {"status": "error", "message": "Invalid subtype (use sub=false to unsubscribe)"}
+    return {"status": "error", "message": "Invalid subtype (use Subscribed=false request to unsubscribe)"}
 
 
 @ensure_correct_data

@@ -41,12 +41,18 @@ class RequestManager():
         self._receiver = Thread(target=self._run_receiver, daemon=True)
 
     def begin(self):
+        """
+        Start the request manager. This will start the sender and receiver threads.
+        """
         if not self._continue:
             self._continue = True
             self._sender.start()
             self._receiver.start()
 
     def stop(self):
+        """
+        Stop the request manager. This will stop the sender and receiver threads.
+        """
         if self._continue:
             self._continue = False
             with self._sender_condition:
@@ -57,30 +63,41 @@ class RequestManager():
     def _run_sender(self):
         with self._sender_condition:
             while self._continue:
+                # block until there is a request to send
                 self._sender_condition.wait_for(lambda: not self._requests.empty() or not self._continue)
+                
                 if not self._continue:
                     break
+                
                 req = self._requests.get()
-                id, subbed = req.id, req.subscribed
+                request_id, subbed = req.id, req.subscribed
+                
+                # if the request is a subscribed request, add it to the subscribed requests dictionary
                 if subbed:
                     with self._subscribed_lock:
-                        self._subscribed_requests[id] = req
+                        self._subscribed_requests[request_id] = req
                 else:
                     with self._normal_lock:
-                        self._normal_requests[id] = req
+                        self._normal_requests[request_id] = req
+                
+                # send the request
                 protocol.send(req, self._sock)
 
     def _run_receiver(self):
         while self._continue:
             try:
-                req, id, subbed = protocol.receive(self._sock)
+                # block until a response is received
+                # the request_id is used to find the request that corresponds to the response
+                req, request_id, subbed = protocol.receive(self._sock)
                 error = req.request_type == RequestType.ERROR
                 if error:
                     logger.warning(f"Received error from server: {req.data['message']}")
 
+                # if the response is for a subscribed request, find the request
+                # in the subscribed requests dictionary and call the callback
                 if subbed:
                     with self._subscribed_lock:
-                        wrapped = self._subscribed_requests.get(id, None)
+                        wrapped = self._subscribed_requests.get(request_id, None)
                         if not wrapped:
                             continue
                         if error:
@@ -90,10 +107,11 @@ class RequestManager():
 
                         if wrapped.callback:
                             self._app.after_idle(wrapped.callback, req)
-
+                # if the response is for a normal request, find the request
+                # in the normal requests dictionary and call the callback
                 else:
                     with self._normal_lock:
-                        wrapped = self._normal_requests.pop(id, None)
+                        wrapped = self._normal_requests.pop(request_id, None)
                         if not wrapped:
                             continue
                         if error:
@@ -152,4 +170,6 @@ class RequestManager():
         def callback(req: Request):
             pass
 
+        # Send the unsubscribe request.
+        # Since a callback is required, a dummy callback is provided.
         self.request(request, callback)

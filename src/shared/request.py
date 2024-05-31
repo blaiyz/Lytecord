@@ -29,8 +29,7 @@ class RequestType(enum.Enum):
 
 
 class Request():
-    def __init__(self, request_type: RequestType, data: dict | Serializeable,
-                 callback: Callable[[Request], None] | None = None):
+    def __init__(self, request_type: RequestType, data: dict | Serializeable):
         self.request_type = request_type
         self.data: dict = data if isinstance(data, dict) else data.to_json_serializeable()
 

@@ -4,6 +4,7 @@ from io import BytesIO
 from threading import Lock
 
 from loguru import logger
+import PIL
 from PIL import Image
 
 from src.server import db
@@ -93,9 +94,9 @@ def generate_attachment(data: bytes, attachment_type: AttachmentType, name: str)
         try:
             image = Image.open(BytesIO(data))
             width, height = image.size
-        except Exception as e:
+        except (FileNotFoundError, PIL.UnidentifiedImageError, ValueError, TypeError) as e:
             logger.exception('Failed to analyze image')
-            raise ValueError("Failed to analyze image")
+            raise ValueError("Failed to analyze image") from e
 
     if width > attachment.MAX_WIDTH:
         raise ValueError(f"Width is too large ({width} > {attachment.MAX_WIDTH})")

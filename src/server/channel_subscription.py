@@ -12,6 +12,11 @@ from src.shared.request import Request, RequestType
 
 
 class ChannelSubscription():
+    """ 
+    Handles the subscription of a client to a channel.
+    
+    Runs in a separate thread to send messages to the client.
+    """
     def __init__(self, client: client.Client, subscription_id: int, channel: Channel):
         self.client = client
         # This is NOT the channel id, but the subscription id
@@ -29,26 +34,23 @@ class ChannelSubscription():
         if not self._stop and not self._startup_event.is_set():
             self._last_message_id = last_message_id
             self._thread.start()
-            self._startup_event.wait()
             self.publisher = publisher
+            # Wait for the thread to start, to avoid race conditions
+            self._startup_event.wait()
 
     def stop(self):
         with self._condition:
             self._stop = True
-            logger.debug("got here")
-            logger.debug('unsubscribed')
             self.publisher = None
             self._condition.notify()
-            logger.debug('notified')
         self._thread.join()
 
     def _run(self):
         with self._condition:
             self._startup_event.set()
-            logger.debug("event set")
             while not self._stop:
+                # Wait for the publisher to wake up the thread
                 self._condition.wait()
-                logger.debug(f"woke up {self._id}, {self._stop}")
                 if self._stop:
                     break
 
@@ -59,22 +61,33 @@ class ChannelSubscription():
                 if len(messages) == 0:
                     continue
 
+                # Send each message in a separate response
                 for message in messages[::-1]:
                     self.client.add_response(self.create_response(message))
                 self._last_message_id = messages[0].id if len(messages) > 0 else self._last_message_id
 
     def create_response(self, message: Message) -> RequestWrapper:
+        """
+        Create a response for the given message.
+        """
         request = Request(RequestType.CHANNEL_SUBSCRIPTION, {"message": message})
         wrapped = RequestWrapper(request, self._id, None, True)
         return wrapped
 
     def wake_up(self):
+        """
+        Wake up the subscription thread.
+        """
         with self._condition:
             self._condition.notify()
 
     def send_message(self, message: Message):
+        """
+        Send a message to the channel.
+        Notifies the publisher to broadcast the message.
+        """
         if not self.publisher:
-            logger.warning("Tried to send message to None channel, please set channel first")
+            logger.warning("Tried to send message to None channel, please set publisher first")
             return False
 
         self._last_message_id = message.id

@@ -58,7 +58,6 @@ class Client():
     def __init__(self, ip: str, port: int, app: CTk):
         self.ip = ip
         self.port = port
-        # Deal with certificate verification later
         self.context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=CERT)
         self.sock: ssl.SSLSocket = self.context.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM), server_hostname=HOST[0])
         self.sock.connect((self.ip, self.port))
@@ -126,6 +125,9 @@ class Client():
         self.request_manager.request(request, callback=c)
 
     def subscribe_channel(self, channel: Channel, callback: Callable[[Message | None], None]):
+        """
+        Subscribe to a channel to receive messages from it.
+        """
         if self.subscription.id is not None:
             logger.warning("Already subscribed (or subscribing) to a channel, please unsubscribe first")
             return
@@ -133,6 +135,7 @@ class Client():
         c_id = channel.id
         confirmation = {"status": False}
 
+        # Callback for the subscription request
         @ensure_correct_data(default=(None,), callback=callback)
         def c(req: Request):
             if confirmation["status"]:
@@ -274,7 +277,7 @@ class Client():
         logger.debug("Closing client")
         self.sock.close()
         self.request_manager.stop()
-        logger.debug("Closed client")
+        logger.success("Closed client")
 
     def send(self, request: Request, callback: Callable | None = None):
         self.request_manager.request(request, callback if callback else self.default_callback)

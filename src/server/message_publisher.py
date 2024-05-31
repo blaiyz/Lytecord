@@ -10,7 +10,6 @@ from src.server import channel_subscription
 
 BUFFER_SIZE = 30
 
-
 class MessagePublisher:
     def __init__(self, channel: Channel):
         self.channel = channel
@@ -32,9 +31,11 @@ class MessagePublisher:
             return len(self._subscriptions) == 0
 
     def broadcast(self, message: Message, sender: channel_subscription.ChannelSubscription):
+        """
+        Broadcast a message to all subscribers.
+        """
         logger.debug(f"Broadcasting message {message} to channel {self.channel}")
         with self._lock:
-            # logger.debug(f"Buffer: {self._buffer}")
             if message in self._buffer:
                 return
 
@@ -45,6 +46,7 @@ class MessagePublisher:
                 if sub != sender:
                     logger.debug(f"waking up {sub}")
                     sub.wake_up()
+        logger.success(f"Message {message} broadcasted to channel {self.channel}")
 
     def get_messages(self, after: int):
         """
@@ -61,5 +63,4 @@ class MessagePublisher:
                 return []
 
             index = bisect.bisect_left(self._buffer, -after, key=lambda x: x.sort_key())
-            # logger.debug(f"Index: {index}, buffer: {self._buffer}")
             return self._buffer[:index]

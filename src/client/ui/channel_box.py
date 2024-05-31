@@ -1,4 +1,4 @@
-from customtkinter import (CTkFont, CTkFrame, CTkLabel)
+from customtkinter import CTkFont, CTkFrame, CTkLabel
 from loguru import logger
 
 from src.client.client import Client

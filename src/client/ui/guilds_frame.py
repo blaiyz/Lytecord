@@ -134,7 +134,7 @@ class GuildsFrame(CTkFrame):
         else:
             try:
                 guild = Guild(0, name, 0)
-            except:
+            except ValueError as _:
                 message = "Invalid name"
 
         if message:

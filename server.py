@@ -24,7 +24,7 @@ def client_acceptor(bindsocket: socket.socket, context: ssl.SSLContext):
         client_sock = context.wrap_socket(sock, server_side=True)
         client = Client(client_sock)
         logger.info(f"Client connected: {addr}")
-        # Creating and running an event loop in a separate thread
+        # Run client handler in a separate thread
         t = threading.Thread(target=client.main_handler, daemon=True)
         t.name = f"Client handler thread; port: {client_sock.getpeername()[1]}"
         t.start()

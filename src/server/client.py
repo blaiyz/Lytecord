@@ -99,4 +99,4 @@ class Client():
             # pylint: disable=broad-except
             except Exception as _:
                 pass
-            logger.debug("Closed client")
+            logger.success("Closed client")

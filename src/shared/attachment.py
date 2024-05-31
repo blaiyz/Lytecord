@@ -2,7 +2,6 @@ import base64
 from dataclasses import dataclass
 from enum import Enum
 from io import BytesIO
-from turtle import width
 
 from loguru import logger
 from PIL import Image

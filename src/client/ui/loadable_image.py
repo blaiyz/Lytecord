@@ -3,6 +3,7 @@ from io import BytesIO
 from tkinter import filedialog
 from typing import Callable
 
+import PIL
 from customtkinter import (CTkButton, CTkFrame, CTkImage, CTkLabel, CTkProgressBar)
 from loguru import logger
 from PIL import Image, ImageDraw
@@ -95,10 +96,18 @@ class LoadableImage(CTkFrame):
         self._image_label.grid()
 
     def load(self, event_loop_insert: Callable | None = None, delay: int = 0):
+        """
+        Load the image. If the image is an attachment, download it first.
+        
+        :param event_loop_insert: The function to call to insert a delayed image load callback
+        in order to prevent blocking the main thread
+        :param delay: The delay to insert the callback
+        """
         if self._loading:
             return
         self._loading = True
 
+        # If the image is already loaded, display it
         if isinstance(self._image, ImageType):
             if event_loop_insert:
                 event_loop_insert(delay, self._display_image)
@@ -117,9 +126,10 @@ class LoadableImage(CTkFrame):
                 self._failed_to_load(f'Failed to load image: {message}')
                 return
 
+            # Open the image
             try:
                 image = Image.open(BytesIO(image_file)).convert("RGBA")
-            except Exception as e:
+            except (FileNotFoundError, PIL.UnidentifiedImageError, ValueError, TypeError) as _:
                 logger.exception("Failed to open image")
                 self._failed_to_load("Failed to open image")
                 return
@@ -127,6 +137,7 @@ class LoadableImage(CTkFrame):
             self._image = image
             self._display_image()
 
+            # Add download button
             download_icon = CTkImage(light_image=DOWNLOAD_ICON_LIGHT, dark_image=DOWNLOAD_ICON_DARK, size=(30, 30))
             self._download_button = CTkButton(self, text="", image=download_icon, command=self.download,
                                               corner_radius=5, fg_color=FG_COLOR, width=30, height=30)
@@ -135,6 +146,7 @@ class LoadableImage(CTkFrame):
         self._loading_animation.start()
         self._loading_animation.grid()
 
+        # Fetch the image
         if event_loop_insert:
             event_loop_insert(delay, self.client.get_attachment_file, self._image.id, callback)
         else:
@@ -158,6 +170,9 @@ class LoadableImage(CTkFrame):
         return im
 
     def download(self):
+        """
+        Save the image to a file
+        """
         if isinstance(self._image, Attachment):
             logger.warning("Load image first")
             return
@@ -177,6 +192,6 @@ class LoadableImage(CTkFrame):
 
         try:
             image_to_save.save(filepath, format=extension[1:].upper())
-        except Exception as e:
+        except (ValueError, OSError) as _:
             logger.exception("Failed to save image")
             return

@@ -135,7 +135,6 @@ class TextChannel(CTkFrame):
         self._entry.configure(placeholder_text=f"Message #{self._channel.name}")
 
         self._messages_frame._parent_canvas.yview_moveto(0)
-        # self.update_idletasks()
         self._top_row = START_ROW
         self._bottom_row = START_ROW + 1
         self._scroll_lock = False
@@ -146,9 +145,6 @@ class TextChannel(CTkFrame):
             self._load_messages(messages, from_top=False, stick=True)
             self._loading = False
 
-            # def set_loading_false():
-            #     self._loading = False
-            # self.after(0, set_loading_false)
 
         self._mm.set_channel(channel, received=callback)
         self._loading = False
@@ -171,18 +167,13 @@ class TextChannel(CTkFrame):
             stick = True
             top = False
 
-        # logger.debug("time1")
         self.update_idletasks()
-        # logger.debug("time2")
 
         if not top:
-            # logger.debug(f"parent canvas {self._messages_frame._parent_canvas.winfo_height()}")
             relative_pos -= self._messages_frame._parent_canvas.winfo_height()
 
-        # logger.debug(f"calculating: {relative_pos}, {message_frame.winfo_y()}, {self._messages_frame.winfo_height()}")
         calculated_pos = (relative_pos + message_frame.winfo_y()) / self._messages_frame.winfo_height()
 
-        # logger.debug(f"calculated_pos: {calculated_pos}")
         self._messages_frame._parent_canvas.yview_moveto(calculated_pos)
 
         if stick:
@@ -205,7 +196,6 @@ class TextChannel(CTkFrame):
             logger.warning("Tried to load 0 messages")
             return
 
-        # logger.debug(f"loading {len(messages)} messages, from_top: {from_top}, stick: {stick}")
         self._scroll_lock = True
 
         if len(messages) == 1:
@@ -218,7 +208,6 @@ class TextChannel(CTkFrame):
         else:
             temp: list[MessageFrame] = [MessageFrame(self._messages_frame, message=message, client=self._client) for
                                         message in messages]
-            # logger.debug(f"loading\n"+"\n".join([m.message.content for m in temp]))
 
             if from_top:
                 self._message_list = self._message_list + temp
@@ -230,8 +219,6 @@ class TextChannel(CTkFrame):
             self._regrid(temp, from_top, stick=bottom_message)
         else:
             self._regrid(temp, from_top)
-        # logger.debug(f"y: {bottom_message.winfo_y()}, bottom_message: {bottom_message.message.content}:{bottom_message}")
-        # logger.debug(f"top_message y: {self._message_list[-1].winfo_y()}")
 
         self._scroll_lock = False
 
@@ -241,8 +228,6 @@ class TextChannel(CTkFrame):
         
         `from_top` specifies whether the messages are loaded from the top or the bottom.
         """
-        # Gigantic wave of off by one error incoming
-        # PLEASE don't touch the numbers
 
         total = len(self._message_list)
         count = len(new_message_frames)
@@ -250,9 +235,8 @@ class TextChannel(CTkFrame):
 
         if was_empty:
             self._messages_frame._parent_canvas.yview_moveto(0)
-        # logger.debug(f"regridding: {from_top}, {self._top_row}, {self._bottom_row}, count: {count}, total: {total}")
-        # logger.debug("\n".join([f"{frame.message.content}:{frame}" for frame in self._message_list]))
 
+        # Normal case, just adding messages
         if total < MAX_MESSAGES and self._top_row >= MIN_ROW and self._bottom_row <= MAX_ROW:
             if from_top:
                 if not was_empty:
@@ -272,6 +256,7 @@ class TextChannel(CTkFrame):
                 for message_frame in new_message_frames[::-1]:
                     message_frame.grid(row=self._bottom_row, **MESSAGE_GRID_KWARGS)
                     self._bottom_row += 1
+        # The scroll frame is at max capacity, need to remove some messages
         else:
             self._top_row = START_ROW
             self._bottom_row = START_ROW + MIN_MESSAGES
@@ -279,7 +264,6 @@ class TextChannel(CTkFrame):
             logger.debug(f"scroll region: {self._messages_frame._parent_canvas.bbox('all')}")
             self._messages_frame._parent_canvas.configure(scrollregion=self._messages_frame._parent_canvas.bbox("all"))
 
-            # logger.debug(f"regridding2: {from_top}, {self._top_row}, {self._bottom_row}, {total}")
             if from_top:
                 if not was_empty:
                     prev_top_frame = self._message_list[-count - 1]
@@ -296,7 +280,7 @@ class TextChannel(CTkFrame):
                     message_frame.grid(row=temp_bottom_row, **MESSAGE_GRID_KWARGS)
                     temp_bottom_row -= 1
 
-                # Band aid solution to force the canvas to update (sorry lol)
+                # Band aid solution to force the canvas to update
                 self._messages_frame._parent_canvas.yview_moveto(0)
             else:
                 if not was_empty:
@@ -317,6 +301,7 @@ class TextChannel(CTkFrame):
                 if stick is not None:
                     self._messages_frame._parent_canvas.yview_moveto(0)
 
+        # Load attachments after the delay
         delay = 1000
         for message_frame in new_message_frames:
             delay += message_frame.load_attachment(delay)
@@ -328,7 +313,7 @@ class TextChannel(CTkFrame):
             self._move_scrollbar_after_load(rel_pos[1], from_top, rel_pos[0])
         return
 
-    def _scroll_callback(self, event: tk.Event):
+    def _scroll_callback(self, _: tk.Event):
         if self._channel is None:
             return
         if self._scroll_lock or self._loading:
@@ -339,21 +324,20 @@ class TextChannel(CTkFrame):
 
         yview = self._messages_frame._parent_canvas.yview()
         if yview[0] == 0.0:
-            # logger.debug(f"scroll callback {yview}")
-            # logger.debug(f"loading from top m:{self._message_list[-1].message.content}")
             messages = self._mm.get_messages(id=self._message_list[-1].message.id, before=True, count=LOAD_COUNT)
-            # logger.debug(f"loading from top\n"+"\n".join([m.content for m in messages]))
             if len(messages) != 0:
                 self._load_messages(messages, from_top=True)
         elif yview[1] == 1.0:
-            # logger.debug(f"scroll callback {yview}")
-            # logger.debug(f"loading from bottom m:{self._message_list[0].message.content}")
             messages = self._mm.get_messages(id=self._message_list[0].message.id, before=False, count=LOAD_COUNT)
-            # logger.debug(f"loading from bottom\n"+"\n".join([m.content for m in messages]))
             if len(messages) != 0:
                 self._load_messages(messages, from_top=False)
 
-    def _send_message(self, event: tk.Event | None = None):
+    def _send_message(self, _: tk.Event | None = None):
+        """
+        Sends a message to the server.
+        
+        If the entry is empty and the attachment is None, or the channel is None, the message will not be sent.
+        """
         if self._entry.get() == "" and self._attachment is None:
             return
         if self._channel is None:
@@ -457,6 +441,9 @@ class TextChannel(CTkFrame):
         self._attachment_image.load()
 
     def _paste_image(self, event: tk.Event):
+        """
+        Pastes an image from the clipboard
+        """
         logger.debug("Pasting image")
         try:
             image = ImageGrab.grabclipboard()

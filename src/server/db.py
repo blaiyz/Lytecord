@@ -34,7 +34,7 @@ def create_indexes():
     users.create_index("username", unique=True, collation=CASE_INSENSITIVE_COLLATION)
     channels.create_index("guild_id")
     guilds.create_index("join_code", unique=True)
-    logger.warning("Please manually create attachment hash index")
+    db["attachments.files"].create_index("hash", unique=True)
 
 
 def get_random_hex_code(length=16):
