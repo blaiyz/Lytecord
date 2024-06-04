@@ -10,20 +10,23 @@ MAX_NAME_LENGTH = 20
 MIN_NAME_LENGTH = 3
 REGEX = re.compile(r"^[a-z0-9\-]{3,20}$")
 
+
 class ChannelType(Serializeable, Enum):
     TEXT = "text"
     VIDEO = "video"
-    
+
     def to_json_serializeable(self):
         return self.name.lower()
-    
+
     @classmethod
     def from_json_serializeable(cls, data: dict[str, str]):
         return ChannelType[data["type"].upper()]
+
     @classmethod
     def deserialize(cls, string: str):
         return cls[string.upper()]
-         
+
+
 @dataclass(frozen=True)
 class Channel(AbsDataClass):
     name: str

@@ -1,4 +1,10 @@
 
+
+`subscribe_channel(self, channel: Channel, callback: Callable[[Message	None], None])`	A Channel object and a callback function	None
+unsubscribe_channel(self)	None	None	Unsubscribes from the current channel if the client is subscribed to any.
+`send_message(self, message: Message, callback: Callable[[Message	None], None])`	A Message object and a callback function	None
+`create_guild(self, name: str, callback: Callable[[Guild	None, str], None])`	Guild name and a callback function	None
+
 ## Used Icons
 
 <details>

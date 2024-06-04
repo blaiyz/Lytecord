@@ -26,17 +26,17 @@ customtkinter.set_appearance_mode("system")
 MIN_WIDTH = 0
 MIN_HEIGHT = 0
 START_WIDTH = 1000
-START_HEIGHT = 1000
+START_HEIGHT = 600
 
 
 class App(customtkinter.CTk):
     width = START_WIDTH
     height = START_HEIGHT
 
-    def __init__(self, *args, client: Client, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.client = client
+        self.client = Client(*HOST, self)
 
         self.title("Lytcord")
         scale_factor = self._get_window_scaling()
@@ -117,7 +117,9 @@ class App(customtkinter.CTk):
         if widget == None:
             return
         widget.focus_set()
-
+        
+    def close_client(self):
+        self.client.close()
 
 
 class AppState(Enum):
@@ -127,8 +129,6 @@ class AppState(Enum):
 
 
 if __name__ == "__main__":
-    client = Client(*HOST)
-    app = App(client = client)
-    client.begin(app)
+    app = App()
     app.mainloop()
-    client.close()
+    app.close_client()

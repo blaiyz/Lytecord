@@ -11,6 +11,7 @@ PASSWORD_REGEX = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d_@$!%*#?&]
 INVALID_COLORS = ['#2b2b2b']
 THRESHOLD = 20
 
+
 def is_valid_username(username: str) -> bool:
     return bool(USERNAME_REGEX.match(username))
 
@@ -18,11 +19,14 @@ def is_valid_username(username: str) -> bool:
 def is_valid_password(password: str) -> bool:
     return bool(PASSWORD_REGEX.match(password))
 
+
 def check_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
 
 def is_valid_color(color: str) -> bool:
     if len(color) != 7 or color[0] != "#":
@@ -32,7 +36,7 @@ def is_valid_color(color: str) -> bool:
         int(hex, 16)
     except ValueError:
         return False
-    
+
     # Check color similarity to invalid colors
     for invalid_color in INVALID_COLORS:
         if User.color_distance(color, invalid_color) < THRESHOLD:
