@@ -5,7 +5,7 @@ from loguru import logger
 
 from src.shared import Request
 
-HOST = ("localhost", 24827)
+HOST = ("10.30.56.221", 24827)
 NUMBER_OF_LENGTH_BYTES = 4
 MAX_DATA_LOG_LENGTH = 500
 CERT = "server.crt"

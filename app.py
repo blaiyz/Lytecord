@@ -15,7 +15,7 @@ from src.client.ui.main_frame import MainFrame
 from src.shared import login_utils
 from src.shared.protocol import HOST
 
-customtkinter.set_appearance_mode("system")
+customtkinter.set_appearance_mode("dark")
 
 # Get system scaling
 # scaleFactor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100

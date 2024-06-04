@@ -32,3 +32,8 @@ A discord clone written in... Python??
   </tr>
 </table>
 </details>
+
+
+
+### Create self-signed certificate:
+`openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout server.key -out server.crt -subj "/CN=<YOUR IP>" -addext "subjectAltName=IP:<YOUR IP>"`
