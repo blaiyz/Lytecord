@@ -2,6 +2,9 @@
 
 A discord clone written in... Python??
 
+![image](https://github.com/blaiyz/Lytecord/assets/139375534/85c49fbc-43e9-4289-8c4b-49e2390c5707)
+
+
 ## How to run
 
 Clone the repo:
