@@ -65,7 +65,6 @@ class MessageFrame(CTkFrame):
                                               max_height=MAX_DISPLAYED_IMAGE_HEIGHT)
             self._image_frame.grid(row=2, column=0, columnspan=2, sticky='w', padx=10, pady=(0, 10))
 
-        # TODO: Implement attachments
         # Using textbox for a few reasons:
         # 1. It has word wrapping
         # 2. Allows you to select text (unlike labels for some reason)

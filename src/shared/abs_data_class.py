@@ -87,14 +87,14 @@ class Serializeable:
                         converted_data[field] = field_type.from_json_serializeable(value)
                     else:
                         # Reached a leaf node
-                        converted_data[field] = field_type(value)  # type: ignore # TODO: Fix this
+                        converted_data[field] = field_type(value)  # type: ignore
                 else:
                     converted_data[field] = field_type(value)
             # Create a new instance of the class with the converted data
             return cls(**converted_data)
         except (KeyError, TypeError) as e:
             logger.exception(f"Cannot convert from data: {e} at class {cls}")
-            raise ValueError(f"Data cannot be converted to {cls.__name__}")
+            raise ValueError(f"Data cannot be converted to {cls.__name__}") from e
 
     @staticmethod
     def deserialize(string: str):

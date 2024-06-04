@@ -23,4 +23,4 @@ def formatter(record):
 
 logger.remove()
 logger.add(stderr, format=formatter)
-logger.info("Loguru configured successfully")
+logger.success("Loguru configured successfully")

@@ -81,5 +81,5 @@ class Attachment(AbsDataClass):
         try:
             image = Image.open(BytesIO(blob))
             return image
-        except:
+        except Exception as _:
             return None
