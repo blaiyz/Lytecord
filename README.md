@@ -2,6 +2,56 @@
 
 A discord clone written in... Python??
 
+## How to run
+
+Clone the repo:
+```
+git clone https://github.com/blaiyz/Lytecord.git
+cd Lytecord
+```
+
+**Optionally** create a virtual environment:
+```
+pip install virtualenv
+virtualenv venv
+source venv/bin/activate
+```
+
+Install dependencies:
+```
+pip install -r requirements.txt
+```
+
+### Server
+Create a self signed certificate:
+```
+openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout server.key -out server.crt -subj "/CN=<YOUR IP>" -addext "subjectAltName=IP:<YOUR IP>"
+```
+
+
+Share the `server.crt` file with the clients.
+
+Open [`src/shared/protocol.py`](./src/shared/protocol.py#L8) and change the HOST global to your need.
+
+Download and install MongoDB and create a database called `Lytecord`, and then run:
+```
+python -c “from setup_database import create_indexes; create_indexes()”
+```
+
+Now start the server with:
+```
+python -m server
+```
+
+### Client (App)
+Receive the `server.crt` file from the server host and place it in the root repo directory.
+
+Open [`src/shared/protocol.py`](./src/shared/protocol.py#L8) and change the HOST global to the server host's address.
+
+Now start the app:
+```
+python -m app
+```
 
 ## Used Icons
 
@@ -32,8 +82,3 @@ A discord clone written in... Python??
   </tr>
 </table>
 </details>
-
-
-
-### Create self-signed certificate:
-`openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout server.key -out server.crt -subj "/CN=<YOUR IP>" -addext "subjectAltName=IP:<YOUR IP>"`

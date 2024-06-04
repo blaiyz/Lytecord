@@ -37,7 +37,7 @@ def create_indexes():
     db["attachments.files"].create_index("hash", unique=True)
 
 
-def get_random_hex_code(length=16):
+def get_random_hex_code(length=8):
     return ''.join(random.choices(string.hexdigits, k=length))
 
 

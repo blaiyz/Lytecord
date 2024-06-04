@@ -98,7 +98,7 @@ class App(customtkinter.CTk):
             self.login_frame.grid_remove()
             self.main_frame.grid()
             self.main_frame.load()
-            #self.state("zoomed")
+            self.state("zoomed")
             self.current_frame = self.main_frame
         else:
             self.main_frame.grid_remove()
