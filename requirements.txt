@@ -1,9 +1,8 @@
 customtkinter==5.2.2
-ctkcomponents==0.4
 CTkMessagebox==2.5
 CTkColorPicker==0.9.0
 pywinstyles==1.7
 loguru==0.7.2
-Pillow==10.2.0
+Pillow==10.3.0
 pymongo==4.7.0
 bcrypt==4.1.3

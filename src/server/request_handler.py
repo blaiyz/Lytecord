@@ -22,7 +22,6 @@ Functions:
 import base64
 import functools
 import zlib
-import py2puml
 
 from loguru import logger
 from pymongo.errors import PyMongoError

@@ -1,5 +1,4 @@
 import customtkinter as ctk
-from ctkcomponents import CTkBanner
 from CTkMessagebox import CTkMessagebox
 from customtkinter import (CTkButton, CTkEntry, CTkFont, CTkFrame, CTkImage,
                            CTkInputDialog, CTkLabel, CTkScrollableFrame)
