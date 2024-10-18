@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 
-from customtkinter import CTkImage
 from loguru import logger
-from PIL import Image
 
 from src.shared.abs_data_class import AbsDataClass
 
@@ -27,5 +25,3 @@ class Guild(AbsDataClass):
             logger.error(f"Author ID ({self.owner_id}) cannot be less than 0")
             raise ValueError("Author ID cannot be less than 0")
 
-    def get_icon(self) -> CTkImage:
-        raise NotImplementedError

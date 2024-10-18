@@ -4,6 +4,8 @@
 examples/
 .pylintrc
 *.puml
+data/
+
 
 server.crt
 server.csr

@@ -20,14 +20,18 @@ def signal_handler(_sig, _frame):
 
 def client_acceptor(bindsocket: socket.socket, context: ssl.SSLContext):
     while True:
-        sock, addr = bindsocket.accept()
-        client_sock = context.wrap_socket(sock, server_side=True)
-        client = Client(client_sock)
-        logger.info(f"Client connected: {addr}")
-        # Run client handler in a separate thread
-        t = threading.Thread(target=client.main_handler, daemon=True)
-        t.name = f"Client handler thread; port: {client_sock.getpeername()[1]}"
-        t.start()
+        try:
+            sock, addr = bindsocket.accept()
+            logger.debug(f"Connection from {addr}")
+            client_sock = context.wrap_socket(sock, server_side=True)
+            client = Client(client_sock)
+            logger.info(f"Client connected: {addr}")
+            # Run client handler in a separate thread
+            t = threading.Thread(target=client.main_handler, daemon=True)
+            t.name = f"Client handler thread; port: {client_sock.getpeername()[1]}"
+            t.start()
+        except Exception as e:
+            logger.exception(f"Error accepting client: {e}")
 
 
 def main():
@@ -37,7 +41,7 @@ def main():
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     context.load_cert_chain(certfile="server.crt", keyfile="server.key")
     bindsocket = socket.socket()
-    bindsocket.bind(HOST)
+    bindsocket.bind(("0.0.0.0", HOST[1]))
     bindsocket.listen(5)
 
     # Importing the db module starts the connection to the database

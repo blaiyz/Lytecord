@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import enum
-import io
 import json
-from collections.abc import Callable
 
 from src.shared.abs_data_class import AbsDataClass, Encoder, Serializeable
 

@@ -1,6 +1,9 @@
 import random
 import string
+import sys
+import os
 
+from dotenv import load_dotenv
 import gridfs
 from loguru import logger
 import pymongo
@@ -11,7 +14,13 @@ from pymongo.collection import Collection
 from src.shared import (AbsDataClass, Attachment, AttachmentType, Channel,
                         ChannelType, Guild, Message, User, attachment)
 
-db_client = MongoClient("mongodb://localhost:27017/")
+load_dotenv()
+
+USER = os.getenv("MONGO_USER")
+PASSWORD = os.getenv("MONGO_PASSWORD")
+CONNECTION_STRING = f'mongodb://{USER + ":" + PASSWORD + "@" if USER and PASSWORD else ""}{"mongo" if '-d' in sys.argv else 'localhost'}:27017/?authSource=admin'
+
+db_client = MongoClient(CONNECTION_STRING)
 db = db_client["Lytecord"]
 guilds: Collection = db["guilds"]
 channels: Collection = db["channels"]

@@ -1,4 +1,3 @@
-import base64
 from dataclasses import dataclass
 from enum import Enum
 from io import BytesIO

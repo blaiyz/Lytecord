@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 
-from customtkinter import CTkImage
 from loguru import logger
-from PIL import Image
 
 from src.shared.abs_data_class import AbsDataClass
 
@@ -25,9 +23,6 @@ class User(AbsDataClass):
         if not self.is_valid_hex_color(self.name_color):
             logger.error(f"Name color ({self.name_color}) is not a valid hex color")
             raise ValueError("Name color is not a valid hex color")
-
-    def get_icon(self) -> CTkImage:
-        raise NotImplementedError
 
     @staticmethod
     def is_valid_hex_color(color: str) -> bool:
