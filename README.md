@@ -21,16 +21,18 @@ source venv/bin/activate
 ```
 
 ### Server
-Create a self signed certificate:
+Create a self signed certificate (you should be able to run this on linux/wsl):
 ```
-openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout server.key -out server.crt -subj "/CN=<YOUR IP>" -addext "subjectAltName=IP:<YOUR IP>"
+openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout server.key -out server.crt -subj "/CN=<YOUR IP>" -addext "subjectAltName=IP:127.0.0.1"
 ```
+
 > [!NOTE]
-> Make sure the `CN` and the `subjectAltName` arguments are the exact ones the clients will use in order to connect to the server.
+> Make sure the `CN` argument is the exact one the clients will use in order to connect to the server.
 > i.e. if you want to be accessible across your local network, you must use your IP address in that network (127.0.0.1 will not work).
 > Similarly, use your domain name if you want to be accessible globally.
 
 Share the `server.crt` file with the clients.
+Yes, really.
 
 **IF YOU ARE RUNNING WITHOUT DOCKER:**
 
@@ -51,12 +53,21 @@ python -m server
 
 **IF YOU ARE RUNNING WITH DOCKER:**
 
-Run
+Create a `.env` file with the following structure (these will be used when creating the database):
+```
+MONGO_USER=<USERNAME>
+MONGO_PASSWORD=<PASSWORD>
+```
+
+> [!NOTE]
+> When you remove the mongodb container or want to change the MongoDB username/password, remove the generated `data` directory to avoid problems in the future.
+
+And then run:
 ```
 docker-compose up -d
 ```
 
-When you remove the mongodb container, remove the generated `data` directory to avoid problems in the future.
+Your server should now be running (at port 24827 by default).
 
 ### Client (App)
 
