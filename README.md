@@ -20,21 +20,24 @@ virtualenv venv
 source venv/bin/activate
 ```
 
-Install dependencies:
-```
-pip install -r requirements.txt
-```
-
 ### Server
 Create a self signed certificate:
 ```
 openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout server.key -out server.crt -subj "/CN=<YOUR IP>" -addext "subjectAltName=IP:<YOUR IP>"
 ```
-
+> [!NOTE]
+> Make sure the `CN` and the `subjectAltName` arguments are the exact ones the clients will use in order to connect to the server.
+> i.e. if you want to be accessible across your local network, you must use your IP address in that network (127.0.0.1 will not work).
+> Similarly, use your domain name if you want to be accessible globally.
 
 Share the `server.crt` file with the clients.
 
-Open [`src/shared/protocol.py`](./src/shared/protocol.py#L8) and change the HOST global to your need.
+**IF YOU ARE RUNNING WITHOUT DOCKER:**
+
+Install dependencies:
+```
+pip install -r requirements.txt
+```
 
 Download and install MongoDB and create a database called `Lytecord`, and then run:
 ```
@@ -46,10 +49,25 @@ Now start the server with:
 python -m server
 ```
 
+**IF YOU ARE RUNNING WITH DOCKER:**
+
+Run
+```
+docker-compose up -d
+```
+
+When you remove the mongodb container, remove the generated `data` directory to avoid problems in the future.
+
 ### Client (App)
+
+Install dependencies:
+```
+pip install -r requirements.txt
+```
+
 Receive the `server.crt` file from the server host and place it in the root repo directory.
 
-Open [`src/shared/protocol.py`](./src/shared/protocol.py#L8) and change the HOST global to the server host's address.
+Open [`src/shared/protocol.py`](./src/shared/protocol.py#L8) and change the HOST global to the server host's address/domain name.
 
 Now start the app:
 ```
